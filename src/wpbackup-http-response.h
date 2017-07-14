@@ -3,7 +3,7 @@
 
 struct wpbackup_http_response;
 
-struct wpbackup_http_response *wpbackup_http_response_new(int code, const char *body);
+struct wpbackup_http_response *wpbackup_http_response_new(int code, char *body);
 
 void wpbackup_http_response_free(struct wpbackup_http_response *response);
 

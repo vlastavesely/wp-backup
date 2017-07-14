@@ -3,16 +3,13 @@
 
 struct wpbackup_http_request;
 
-struct wpbackup_http_request *wpbackup_http_request_new(const char *url);
+struct wpbackup_http_request *wpbackup_http_request_new(char *url);
 
 void wpbackup_http_request_free(struct wpbackup_http_request *request);
 
 
-void wpbackup_http_request_set_content_type(struct wpbackup_http_request *request,
-					    const char *content_type);
-
 void wpbackup_http_request_set_body(struct wpbackup_http_request *request,
-				    const char *body);
+				    char *body, char *content_type);
 
 
 char *wpbackup_http_request_get_url(struct wpbackup_http_request *request);

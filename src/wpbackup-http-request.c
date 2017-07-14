@@ -10,7 +10,7 @@ struct wpbackup_http_request
 	char *body;
 };
 
-struct wpbackup_http_request *wpbackup_http_request_new(const char *url)
+struct wpbackup_http_request *wpbackup_http_request_new(char *url)
 {
 	struct wpbackup_http_request *request
 		= malloc(sizeof(struct wpbackup_http_request));
@@ -39,18 +39,13 @@ void wpbackup_http_request_free(struct wpbackup_http_request *request)
 }
 
 
-void wpbackup_http_request_set_content_type(struct wpbackup_http_request *request,
-					    const char *content_type)
-{
-	request->content_type = malloc(strlen(content_type) + 1);
-	strcpy(request->content_type, content_type);
-}
-
 void wpbackup_http_request_set_body(struct wpbackup_http_request *request,
-				    const char *body)
+				    char *body, char *content_type)
 {
 	request->body = malloc(strlen(body) + 1);
 	strcpy(request->body, body);
+	request->content_type = malloc(strlen(content_type) + 1);
+	strcpy(request->content_type, content_type);
 }
 
 

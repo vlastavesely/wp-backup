@@ -9,7 +9,7 @@ struct wpbackup_http_response
 	char *body;
 };
 
-struct wpbackup_http_response *wpbackup_http_response_new(int code, const char *body)
+struct wpbackup_http_response *wpbackup_http_response_new(int code, char *body)
 {
 	struct wpbackup_http_response *response
 		= malloc(sizeof(struct wpbackup_http_response));
