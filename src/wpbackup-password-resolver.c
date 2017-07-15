@@ -6,9 +6,24 @@
 
 #include <wpbackup-password-resolver.h>
 
+#define PASSWORD_BUFFER_SIZE 256
+
 static void print_prompt()
 {
 	fprintf(stderr, "Enter your WordPress password: ");
+}
+
+static void trim_trailing_newlines(char **str)
+{
+	char *end;
+
+	end = *str + strlen(*str) - 1;
+	while(end > *str && ((char) *end == '\n' || (char) *end == '\r')) {
+		end--;
+	}
+	end++;
+
+	*end = 0;
 }
 
 char *wpbackup_password_resolver_resolve_password()
@@ -17,7 +32,8 @@ char *wpbackup_password_resolver_resolve_password()
 	if (password) {
 		return password;
 	} else {
-		char buffer[256];
+		char *buffer = malloc(PASSWORD_BUFFER_SIZE);
+		memset(buffer, 0, PASSWORD_BUFFER_SIZE);
 
 		if (isatty(0)) {
 			struct termios oflags;
@@ -42,11 +58,14 @@ char *wpbackup_password_resolver_resolve_password()
 				return NULL;
 			}
 		} else {
-			fgets(buffer, sizeof buffer, stdin);
+			fgets(buffer, PASSWORD_BUFFER_SIZE, stdin);
 		}
 
+		trim_trailing_newlines(&buffer);
 		password = malloc(strlen(buffer) + 1);
 		strcpy(password, buffer);
+		memset(buffer, 0, PASSWORD_BUFFER_SIZE);
+
 		return password;
 	}
 }
