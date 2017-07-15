@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include <wpbackup-password-resolver.h>
+#include <wpbackup/password-resolver.h>
 
 #define PASSWORD_BUFFER_SIZE 256
 
@@ -26,7 +26,7 @@ static void trim_trailing_newlines(char **str)
 	*end = 0;
 }
 
-char *wpbackup_password_resolver_resolve_password()
+char *password_resolver_resolve_password()
 {
 	char *password = getenv("WPPASS");
 	if (password) {

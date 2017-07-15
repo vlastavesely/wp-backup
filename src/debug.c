@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <wpbackup-debug.h>
+#include <wpbackup/debug.h>
 
 void debug_info(char *format,...)
 {

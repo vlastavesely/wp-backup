@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <wpbackup-http-request.h>
+#include <wpbackup/http-request.h>
 
-struct wpbackup_http_request
+struct http_request
 {
 	int method;
 	char *url;
@@ -11,12 +11,11 @@ struct wpbackup_http_request
 	char *body;
 };
 
-struct wpbackup_http_request *wpbackup_http_request_new(char *url)
+struct http_request *http_request_new(char *url)
 {
-	struct wpbackup_http_request *request
-		= malloc(sizeof(struct wpbackup_http_request));
+	struct http_request *request = malloc(sizeof(struct http_request));
 
-	request->method = WPBACKUP_HTTP_METHOD_POST;
+	request->method = HTTP_METHOD_POST;
 	request->url = malloc(strlen(url) + 1);
 	strcpy(request->url, url);
 	request->content_type = NULL;
@@ -24,7 +23,7 @@ struct wpbackup_http_request *wpbackup_http_request_new(char *url)
 	return request;
 }
 
-void wpbackup_http_request_free(struct wpbackup_http_request *request)
+void http_request_free(struct http_request *request)
 {
 	if (request->url) {
 		free(request->url);
@@ -41,14 +40,14 @@ void wpbackup_http_request_free(struct wpbackup_http_request *request)
 }
 
 
-void wpbackup_http_request_set_method(struct wpbackup_http_request *request,
-				      enum wpbackup_http_method method)
+void http_request_set_method(struct http_request *request,
+			     enum http_method method)
 {
 	request->method = method;
 }
 
-void wpbackup_http_request_set_body(struct wpbackup_http_request *request,
-				    char *body, char *content_type)
+void http_request_set_body(struct http_request *request,
+			   char *body, char *content_type)
 {
 	request->body = malloc(strlen(body) + 1);
 	strcpy(request->body, body);
@@ -57,19 +56,19 @@ void wpbackup_http_request_set_body(struct wpbackup_http_request *request,
 }
 
 
-enum wpbackup_http_method wpbackup_http_request_get_method(struct wpbackup_http_request *request)
+enum http_method http_request_get_method(struct http_request *request)
 {
 	return request->method;
 }
 
-char *wpbackup_http_request_get_url(struct wpbackup_http_request *request)
+char *http_request_get_url(struct http_request *request)
 {
 	char *s = malloc(strlen(request->url) + 1);
 	strcpy(s, request->url);
 	return s;
 }
 
-char *wpbackup_http_request_get_content_type(struct wpbackup_http_request *request)
+char *http_request_get_content_type(struct http_request *request)
 {
 	char *s = NULL;
 	if (request->content_type) {
@@ -79,7 +78,7 @@ char *wpbackup_http_request_get_content_type(struct wpbackup_http_request *reque
 	return s;
 }
 
-char *wpbackup_http_request_get_body(struct wpbackup_http_request *request)
+char *http_request_get_body(struct http_request *request)
 {
 	char *s = NULL;
 	if (request->body) {
