@@ -2,9 +2,9 @@
 #define __DEBUG_H
 
 #ifdef __DEBUG
-	#define DEBUG(format, args...) debug_info(format, args)
+	#define DEBUG(format...) debug_info(format)
 #else
-	#define DEBUG(format, args...)
+	#define DEBUG(format...)
 #endif
 
 void debug_info(char *format,...);
