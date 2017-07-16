@@ -16,8 +16,7 @@ struct http_request *http_request_new(char *url)
 	struct http_request *request = malloc(sizeof(struct http_request));
 
 	request->method = HTTP_METHOD_POST;
-	request->url = malloc(strlen(url) + 1);
-	strcpy(request->url, url);
+	request->url = strdup(url);
 	request->content_type = NULL;
 	request->body = NULL;
 	return request;
@@ -49,10 +48,8 @@ void http_request_set_method(struct http_request *request,
 void http_request_set_body(struct http_request *request,
 			   char *body, char *content_type)
 {
-	request->body = malloc(strlen(body) + 1);
-	strcpy(request->body, body);
-	request->content_type = malloc(strlen(content_type) + 1);
-	strcpy(request->content_type, content_type);
+	request->body = strdup(body);
+	request->content_type = strdup(content_type);
 }
 
 
@@ -63,27 +60,23 @@ enum http_method http_request_get_method(struct http_request *request)
 
 char *http_request_get_url(struct http_request *request)
 {
-	char *s = malloc(strlen(request->url) + 1);
-	strcpy(s, request->url);
-	return s;
+	return strdup(request->url);
 }
 
 char *http_request_get_content_type(struct http_request *request)
 {
-	char *s = NULL;
 	if (request->content_type) {
-		s = malloc(strlen(request->content_type) + 1);
-		strcpy(s, request->content_type);
+		return strdup(request->content_type);
+	} else {
+		return NULL;
 	}
-	return s;
 }
 
 char *http_request_get_body(struct http_request *request)
 {
-	char *s = NULL;
 	if (request->body) {
-		s = malloc(strlen(request->body) + 1);
-		strcpy(s, request->body);
+		return strdup(request->body);
+	} else {
+		return NULL;
 	}
-	return s;
 }

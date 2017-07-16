@@ -15,8 +15,7 @@ struct http_response *http_response_new(int code, char *body)
 		= malloc(sizeof(struct http_response));
 
 	response->code = code;
-	response->body = malloc(strlen(body) + 1);
-	strcpy(response->body, body);
+	response->body = strdup(body);
 	return response;
 }
 
@@ -36,7 +35,5 @@ int http_response_get_code(struct http_response *response)
 
 char *http_response_get_body(struct http_response *response)
 {
-	char *s = malloc(strlen(response->body) + 1);
-	strcpy(s, response->body);
-	return s;
+	return strdup(response->body);
 }
