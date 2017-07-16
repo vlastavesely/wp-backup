@@ -15,7 +15,7 @@ struct http_request *http_request_new(char *url)
 {
 	struct http_request *request = malloc(sizeof(struct http_request));
 
-	request->method = HTTP_METHOD_POST;
+	request->method = HTTP_METHOD_GET;
 	request->url = strdup(url);
 	request->content_type = NULL;
 	request->body = NULL;
