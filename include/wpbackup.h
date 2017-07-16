@@ -9,6 +9,7 @@
 #include <wpbackup/http-client.h>
 #include <wpbackup/password-resolver.h>
 #include <wpbackup/utils.h>
+#include <wpbackup/options.h>
 #include <wpbackup/debug.h>
 
 #endif /* __WPBACKUP_H */
