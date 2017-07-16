@@ -30,7 +30,7 @@ char *password_resolver_resolve_password()
 {
 	char *password = getenv("WPPASS");
 	if (password) {
-		return password;
+		return strdup(password);
 	} else {
 		char *buffer = malloc(PASSWORD_BUFFER_SIZE);
 		memset(buffer, 0, PASSWORD_BUFFER_SIZE);
