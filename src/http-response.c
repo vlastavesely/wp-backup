@@ -7,15 +7,20 @@ struct http_response
 {
 	int code;
 	char *body;
+	size_t length;
 };
 
-struct http_response *http_response_new(int code, char *body)
+struct http_response *http_response_new(int code, unsigned char *body,
+					size_t length)
 {
 	struct http_response *response
 		= malloc(sizeof(struct http_response));
 
 	response->code = code;
-	response->body = strdup(body);
+
+	response->body = malloc(length);
+	memcpy(response->body, body, length);
+	response->length = length;
 	return response;
 }
 
@@ -33,7 +38,14 @@ int http_response_get_code(struct http_response *response)
 	return response->code;
 }
 
-char *http_response_get_body(struct http_response *response)
+unsigned char *http_response_get_body(struct http_response *response)
 {
-	return strdup(response->body);
+	unsigned char *body = malloc(response->length);
+	memcpy(body, response->body, response->length);
+	return body;
+}
+
+size_t http_response_get_body_length(struct http_response *response)
+{
+	return response->length;
 }

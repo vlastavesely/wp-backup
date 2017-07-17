@@ -66,9 +66,20 @@ struct http_response *http_client_send(struct http_client *client,
 	DEBUG("Sending a request to '%s'...\n", http_request_get_url(request));
 	code = soup_session_send_message(client->session, message);
 
-	struct http_response *response = http_response_new(code, (char *)
-						message->response_body->data);
+	/* TODO - it would be nice to allow using some callback saving
+	 * chunks directly instead of storing all the chunks in the
+	 * memory. It could be a problem for huge files. */
+	SoupBuffer *buffer;
+	unsigned char *data;
+	size_t length;
+
+	/* Gets length and pointer to WHOLE response's body */
+	buffer = soup_message_body_flatten(message->response_body);
+	soup_buffer_get_data(buffer, (const guint8 **) &data, &length);
+
+	struct http_response *response = http_response_new(code, data, length);
 	g_object_unref(message);
+	soup_buffer_free(buffer);
 
 	return response;
 }
