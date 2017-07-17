@@ -8,6 +8,7 @@
 #include <wpbackup/http-response.h>
 #include <wpbackup/http-client.h>
 #include <wpbackup/password-resolver.h>
+#include <wpbackup/wordpress-connection.h>
 #include <wpbackup/utils.h>
 #include <wpbackup/options.h>
 #include <wpbackup/debug.h>
