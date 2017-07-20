@@ -2,7 +2,8 @@
 #include <string.h>
 #include <libsoup/soup.h>
 
-#include <wpbackup.h>
+#include <wp-backup/debug.h>
+#include <wp-backup/http-client.h>
 
 struct http_client
 {

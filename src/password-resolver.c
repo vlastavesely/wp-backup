@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include <wpbackup/password-resolver.h>
+#include <wp-backup/password-resolver.h>
 
 #define PASSWORD_BUFFER_SIZE 256
 

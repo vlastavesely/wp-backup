@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <wpbackup/http-request.h>
+#include <wp-backup/http-request.h>
 
 struct http_request
 {

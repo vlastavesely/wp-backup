@@ -3,7 +3,7 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <wpbackup/options.h>
+#include <wp-backup/options.h>
 
 static struct option long_options[] = {
 	{"username",    required_argument, 0, 'u'},

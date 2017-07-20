@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <wpbackup.h>
+#include <wp-backup.h>
 
 struct wordpress_connection
 {

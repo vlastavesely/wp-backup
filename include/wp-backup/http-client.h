@@ -1,7 +1,8 @@
 #ifndef __HTTP_CLIENT_H
 #define __HTTP_CLIENT_H
 
-#include <wpbackup.h>
+#include <wp-backup/http-request.h>
+#include <wp-backup/http-response.h>
 
 struct http_client;
 

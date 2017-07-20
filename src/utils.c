@@ -2,7 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <wpbackup/utils.h>
+#include <wp-backup/utils.h>
 
 static char byte_to_hex(char code)
 {
