@@ -28,7 +28,20 @@ static void print_version()
 
 static void print_usage()
 {
-	fprintf(stdout, "%s\n", "The usage.."); // TODO
+	fprintf(stdout,
+		"Usage: " APPNAME " [options]\n"
+		"\n"
+		"Options:\n"
+		"  -h, --help          shows this help and exits\n"
+		"  -v, --version       shows version number and exits\n"
+		"  -u, --username      username for login into WordPress\n"
+		"  -w, --wpurl         URL of the WordPress installation "
+				       "(without \"wp-admin\" or \"wp-login\")\n"
+		"  -o, --output-file   destination file name for downladed XML\n"
+		"\n"
+		"  " APPNAME " reads password from standard input.\n"
+		"  WordPress must be v2.5.0 or higher!\n"
+		"\n");
 }
 
 
