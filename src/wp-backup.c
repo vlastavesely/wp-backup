@@ -37,9 +37,11 @@ static void print_usage()
 		"  -u, --username      username for login into WordPress\n"
 		"  -w, --wpurl         URL of the WordPress installation "
 				       "(without \"wp-admin\" or \"wp-login\")\n"
-		"  -o, --output-file   destination file name for downladed XML\n"
+		"  -o, --output-file   destination file name for downloaded XML "
+				       "(default: \"wordpress.xml\")\n"
 		"\n"
-		"  " APPNAME " reads password from standard input.\n"
+		"  " APPNAME " reads password from standard input or "
+		"environmental variable WPPASS.\n"
 		"  WordPress must be v2.5.0 or higher!\n"
 		"\n");
 }
