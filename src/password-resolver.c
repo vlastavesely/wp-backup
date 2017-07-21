@@ -68,8 +68,7 @@ char *password_resolver_resolve_password()
 
 			print_prompt();
 
-			fgets(buffer, sizeof(buffer), stdin);
-			buffer[strlen(buffer)-1] = 0;
+			fgets(buffer, PASSWORD_BUFFER_SIZE, stdin);
 			if (tcsetattr(0, TCSANOW, &oflags) != 0) {
 				perror("tcsetattr");
 				return NULL;
