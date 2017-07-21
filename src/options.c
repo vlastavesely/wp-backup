@@ -74,6 +74,9 @@ static void report_invalid_option(const char *message)
 
 static void validate_options(struct options *options)
 {
+	if (options->help ||options->version) {
+		return;
+	}
 	if (options->username == NULL) {
 		report_invalid_option("username cannot be empty.");
 	}
