@@ -1,6 +1,6 @@
 CC           = gcc
 SHELL        = /bin/bash
-CFLAGS       = -Wall -Iinclude `pkg-config --libs --cflags libsoup-2.4` -D__DEBUG
+CFLAGS       = -Wall -Iinclude `pkg-config --libs --cflags libsoup-2.4`
 
 TARGET       = wp-backup
 SRCDIR       = src
@@ -25,13 +25,13 @@ OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)
 all: $(BUILDDIR)/$(TARGET)
 
 $(BUILDDIR)/$(TARGET): $(OBJECTS) $(SRCDIR)/wp-backup.c include/wp-backup.h
-	$(CC) $(SRCDIR)/wp-backup.c $(OBJECTS) $(CFLAGS) -o $@
+	$(CC) $(SRCDIR)/wp-backup.c $(OBJECTS) $(CFLAGS) $(DEBUG) -o $@
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c	\
 		$(INCDIR)/wp-backup/%.h		\
 		include/wp-backup.h
 	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEBUG) -c $< -o $@
 
 clean:
 	rm -rf $(BUILDDIR)
