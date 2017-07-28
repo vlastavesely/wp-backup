@@ -20,7 +20,7 @@ OBJS =	debug.o			\
 OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)
 
 
-.PHONY: all install uninstall clean
+.PHONY: all install uninstall dist clean
 
 all: $(BUILDDIR)/$(TARGET)
 
@@ -40,5 +40,10 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c	\
 	@mkdir -p $(OBJDIR)
 	$(CC) $(CFLAGS) $(DEBUG) -c $< -o $@
 
+dist:	clean
+	cd ..; \
+	tar cfvz $(TARGET)/$(TARGET).tar.gz --exclude=$(TARGET)/test.sh	\
+		$(TARGET)/*
+
 clean:
-	rm -rf $(BUILDDIR)
+	rm -rf $(BUILDDIR) $(TARGET).tar.gz
