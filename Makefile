@@ -20,9 +20,16 @@ OBJS =	debug.o			\
 OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)
 
 
-.PHONY: all clean
+.PHONY: all install uninstall clean
 
 all: $(BUILDDIR)/$(TARGET)
+
+install:
+	cp -f $(BUILDDIR)/$(TARGET) /usr/bin/wp-backup
+	chmod +x /usr/bin/wp-backup
+
+uninstall:
+	rm -f /usr/bin/wp-backup
 
 $(BUILDDIR)/$(TARGET): $(OBJECTS) $(SRCDIR)/wp-backup.c include/wp-backup.h
 	$(CC) $(SRCDIR)/wp-backup.c $(OBJECTS) $(CFLAGS) $(DEBUG) -o $@
