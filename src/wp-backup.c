@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	connection = wordpress_connection_initialize(options->wpurl);
+	connection = wordpress_connection_initialize(options);
 	password = password_resolver_resolve_password();
 
 	logged = wordpress_connection_login(connection, options->username,

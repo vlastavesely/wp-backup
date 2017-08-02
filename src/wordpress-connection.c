@@ -83,13 +83,14 @@ wordpress_connection_match_logout_url(struct wordpress_connection *connection,
 	}
 }
 
-struct wordpress_connection *wordpress_connection_initialize(const char *wpurl)
+struct wordpress_connection *
+wordpress_connection_initialize(struct options *options)
 {
 	struct wordpress_connection *connection;
 
 	connection = malloc(sizeof(struct wordpress_connection));
 	connection->http_client = http_client_new();
-	connection->wpurl = strdup(wpurl);
+	connection->wpurl = strdup(options->wpurl);
 	connection->logout_url = NULL;
 
 	return connection;

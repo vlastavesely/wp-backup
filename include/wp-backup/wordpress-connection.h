@@ -20,11 +20,13 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <wp-backup/options.h>
 
 struct wordpress_connection;
 
 
-struct wordpress_connection *wordpress_connection_initialize(const char *wpurl);
+struct wordpress_connection *
+wordpress_connection_initialize(struct options *options);
 
 void wordpress_connection_free(struct wordpress_connection *connection);
 
