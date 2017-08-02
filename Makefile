@@ -25,6 +25,9 @@ OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)
 all: $(BUILDDIR)/$(TARGET)
 
 install:
+ifeq ("$(wildcard $(BUILDDIR)/$(TARGET))", "")
+	$(error "Application has not been compiled yet. Run `make`.")
+endif
 	cp -f $(BUILDDIR)/$(TARGET) /usr/bin/wp-backup
 	chmod +x /usr/bin/wp-backup
 
