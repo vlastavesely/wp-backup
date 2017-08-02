@@ -8,11 +8,12 @@ Usage
 Usage: wp-backup [options]
 
 Options:
-  -h, --help          shows this help and exits
-  -v, --version       shows version number and exits
-  -u, --username      username for login into WordPress
-  -w, --wpurl         URL of the WordPress installation (without "wp-admin" or "wp-login")
-  -o, --output-file   destination file name for downloaded XML (default: "wordpress.xml")
+  -h, --help               shows this help and exits
+  -v, --version            shows version number and exits
+  -u, --username           username for login into WordPress
+  -w, --wpurl              URL of the WordPress installation (without "wp-admin" or "wp-login")
+  -o, --output-file        destination file name for downloaded XML (default: "wordpress.xml")
+      --ignore-ssl-errors  skips SSL certificate validation (this is not a good practice!)
 
   wp-backup reads password from standard input or environmental variable WPPASS.
   WordPress must be v2.5.0 or higher!
