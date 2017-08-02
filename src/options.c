@@ -96,6 +96,15 @@ static void validate_options(struct options *options)
 		report_invalid_option("WordPress URL does not have 'http://'"
 				      " or 'https://' prefix.");
 	}
+	if (options->ignore_ssl_errors) {
+		fprintf(stderr,
+			"\e[33m\n"
+			"WARNING: skiping validation of SSL certificate\n"
+			"is considered to be a risk. You should do your\n"
+			"best to fix your server's SSL settings and not\n"
+			"use this option at all!\n"
+			"\e[0m\n");
+	}
 }
 
 struct options *options_parse(int argc, char **argv)
