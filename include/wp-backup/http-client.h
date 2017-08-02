@@ -31,4 +31,6 @@ void http_client_free(struct http_client *client);
 struct http_response *http_client_send(struct http_client *client,
 				       struct http_request *request);
 
+void http_client_skip_ssl_validation(struct http_client *client);
+
 #endif /* __HTTP_CLIENT_H */

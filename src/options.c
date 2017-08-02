@@ -28,6 +28,7 @@ static struct option long_options[] = {
 	{"output-file", required_argument, 0, 'o'},
 	{"version",     no_argument,       0, 'v'},
 	{"help",        no_argument,       0, 'h'},
+	{"ignore-ssl-errors", no_argument, 0, 0},
 	{0, 0, 0, 0}
 };
 
@@ -35,12 +36,19 @@ static void getopt_parse(struct options *options, int argc, char **argv)
 {
 	int option_index = 0;
 	int c = 0;
+	const char *name;
 
 	while (c != -1) {
 		c = getopt_long(argc, argv, "u:w:o:vh", long_options,
 				&option_index);
 
 		switch (c) {
+			case 0:
+				name = long_options[option_index].name;
+				if (!strcmp(name, "ignore-ssl-errors")) {
+					options->ignore_ssl_errors = true;
+				}
+				break;
 			case 'u':
 				options->username = optarg;
 				break;
@@ -99,6 +107,7 @@ struct options *options_parse(int argc, char **argv)
 	options->output_file = "wordpress.xml";
 	options->version = false;
 	options->help = false;
+	options->ignore_ssl_errors = false;
 
 	getopt_parse(options, argc, argv);
 	validate_options(options);

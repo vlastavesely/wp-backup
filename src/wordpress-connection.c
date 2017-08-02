@@ -93,6 +93,10 @@ wordpress_connection_initialize(struct options *options)
 	connection->wpurl = strdup(options->wpurl);
 	connection->logout_url = NULL;
 
+	if (options->ignore_ssl_errors) {
+		http_client_skip_ssl_validation(connection->http_client);
+	}
+
 	return connection;
 }
 

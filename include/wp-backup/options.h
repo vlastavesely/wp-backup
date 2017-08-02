@@ -27,6 +27,7 @@ struct options
 	const char *output_file;
 	bool version;
 	bool help;
+	bool ignore_ssl_errors;
 };
 
 struct options *options_parse(int argc, char **argv);

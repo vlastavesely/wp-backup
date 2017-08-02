@@ -101,3 +101,10 @@ struct http_response *http_client_send(struct http_client *client,
 
 	return response;
 }
+
+void http_client_skip_ssl_validation(struct http_client *client)
+{
+	if (client->session) {
+		g_object_set(G_OBJECT(client->session), SOUP_SESSION_SSL_STRICT, FALSE, NULL);
+	}
+}
