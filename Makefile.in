@@ -1,6 +1,6 @@
-CC           = gcc
-SHELL        = /bin/bash
-CFLAGS       = -Wall -Iinclude `pkg-config --libs --cflags libsoup-2.4`
+CC = @CC@
+CFLAGS = @CFLAGS@ @SOUP_CFLAGS@ -Wall -Iinclude -std=c99 -pedantic
+LIBS = @LIBS@ @SOUP_LIBS@
 
 TARGET       = wp-backup
 SRCDIR       = src
@@ -35,13 +35,13 @@ uninstall:
 	rm -f /usr/bin/wp-backup
 
 $(BUILDDIR)/$(TARGET): $(OBJECTS) $(SRCDIR)/wp-backup.c include/wp-backup.h
-	$(CC) $(SRCDIR)/wp-backup.c $(OBJECTS) $(CFLAGS) $(DEBUG) -o $@
+	$(CC) $(SRCDIR)/wp-backup.c $(OBJECTS) $(CFLAGS) $(LIBS) $(DEBUG) -o $@
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c	\
 		$(INCDIR)/wp-backup/%.h		\
 		include/wp-backup.h
 	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) $(DEBUG) -c $< -o $@
+	$(CC) $(CFLAGS) $(LIBS) $(DEBUG) -c $< -o $@
 
 dist:	clean
 	cd ..; \

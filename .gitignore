@@ -3,6 +3,7 @@
 /config.h
 /config.log
 /config.status
+*~
 
 /test.sh
 /wp-backup.tar.gz
