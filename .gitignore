@@ -1,12 +1,14 @@
-*.o
+# Build and temporary files
 /build
-/config.h
-/config.log
-/config.status
+*.o
 *~
 
+# Distribution files
+/*.tar.gz
+
+# Test files
 /test.sh
-/wp-backup.tar.gz
+/wordpress.xml
 
 # http://www.gnu.org/software/automake
 
@@ -27,7 +29,10 @@ Makefile
 /aclocal.m4
 /compile
 /config.guess
+/config.h
 /config.h.in
+/config.log
+/config.status
 /config.sub
 /configure
 /configure.scan
