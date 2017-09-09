@@ -19,9 +19,9 @@
 #define __DEBUG_H
 
 #ifdef __DEBUG
-	#define DEBUG(format...) debug_info(format)
+	#define DEBUG(...) debug_info(__VA_ARGS__)
 #else
-	#define DEBUG(format...)
+	#define DEBUG(...)
 #endif
 
 void debug_info(char *format,...);

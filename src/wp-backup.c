@@ -102,11 +102,11 @@ int main(int argc, char **argv)
 		options->output_file);
 	free(export_url);
 
-	// TODO Check that the dump is valid
+	/* TODO Check that the dump is valid */
 
 	logged = wordpress_connection_logout(connection);
 	if (!logged) {
-		fprintf(stderr, "\e[33mwarning: logout failed.\e[0m\n");
+		fprintf(stderr, "\x1b[33mwarning: logout failed.\x1b[0m\n");
 	}
 
 out:

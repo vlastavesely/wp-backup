@@ -98,12 +98,12 @@ static void validate_options(struct options *options)
 	}
 	if (options->ignore_ssl_errors) {
 		fprintf(stderr,
-			"\e[33m\n"
+			"\x1b[33m\n"
 			"WARNING: skiping validation of SSL certificate\n"
 			"is considered to be a risk. You should do your\n"
 			"best to fix your server's SSL settings and not\n"
 			"use this option at all!\n"
-			"\e[0m\n");
+			"\x1b[0m\n");
 	}
 }
 
