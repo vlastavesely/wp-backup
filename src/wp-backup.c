@@ -23,13 +23,13 @@
 
 static void print_version()
 {
-	fprintf(stdout, "%s v%s\n", APPNAME, VERSION);
+	fprintf(stdout, "%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
 }
 
 static void print_usage()
 {
 	fprintf(stdout,
-		"Usage: " APPNAME " [options]\n"
+		"Usage: " PACKAGE_NAME " [options]\n"
 		"\n"
 		"Options:\n"
 		"  -h, --help               shows this help and exits\n"
@@ -42,7 +42,7 @@ static void print_usage()
 		"      --ignore-ssl-errors  skips SSL certificate validation "
 					"(this is not a good practice!)\n"
 		"\n"
-		"  " APPNAME " reads password from standard input or "
+		"  " PACKAGE_NAME " reads password from standard input or "
 		"environmental variable WPPASS.\n"
 		"  WordPress must be v2.5.0 or higher!\n"
 		"\n");

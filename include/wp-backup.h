@@ -18,9 +18,7 @@
 #ifndef __WP_BACKUP_H
 #define __WP_BACKUP_H
 
-#define APPNAME "wp-backup"
-#define VERSION "2.0"
-
+#include <config.h>
 #include <wp-backup/http-request.h>
 #include <wp-backup/http-response.h>
 #include <wp-backup/http-client.h>
