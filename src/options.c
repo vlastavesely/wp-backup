@@ -45,33 +45,33 @@ static void getopt_parse(struct options *options, int argc, const char **argv)
 				short_opts, long_opts, &opt_index);
 
 		switch (c) {
-			case 0:
-				name = long_opts[opt_index].name;
-				if (!strcmp(name, "ignore-ssl-errors"))
-					options->ignore_ssl_errors = 1;
-				break;
-			case 'u':
-				options->username = optarg;
-				break;
-			case 'w':
-				options->wpurl = optarg;
-				break;
-			case 'o':
-				options->output_file = optarg;
-				break;
-			case 'v':
-				options->version = 1;
-				break;
-			case 'h':
-				options->help = 1;
-				break;
-			case '?':
-				/* Unrecognized parameter. Error message has
-				 * been already printed by getopt.
-				 */
-				exit(1);
-			default:
-				break;
+		case 0:
+			name = long_opts[opt_index].name;
+			if (!strcmp(name, "ignore-ssl-errors"))
+				options->ignore_ssl_errors = 1;
+			break;
+		case 'u':
+			options->username = optarg;
+			break;
+		case 'w':
+			options->wpurl = optarg;
+			break;
+		case 'o':
+			options->output_file = optarg;
+			break;
+		case 'v':
+			options->version = 1;
+			break;
+		case 'h':
+			options->help = 1;
+			break;
+		case '?':
+			/* Unrecognized parameter. Error message has
+			 * been already printed by getopt.
+			 */
+			exit(1);
+		default:
+			break;
 		}
 	}
 }
