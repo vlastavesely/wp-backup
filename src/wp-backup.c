@@ -21,55 +21,63 @@
 
 #include <wp-backup.h>
 
+static const char usage_string[] =
+	"Usage: %s [options]\n"
+	"\n"
+	"Options:\n"
+	"  -h, --help               shows this help and exits\n"
+	"  -v, --version            shows version number and exits\n"
+	"  -u, --username           username for login into WordPress\n"
+	"  -w, --wpurl              URL of the WordPress installation (without \"wp-admin\" or \"wp-login\")\n"
+	"  -o, --output-file        destination file name for downloaded XML (default: \"wordpress.xml\")\n"
+	"      --ignore-ssl-errors  skips SSL certificate validation (this is not a good practice!)\n"
+	"\n"
+	"  %s reads password from standard input or "
+	"environmental variable WPPASS.\n"
+	"  WordPress must be v2.5.0 or higher!\n\n";
+
 static void print_version()
 {
-	fprintf(stdout, "%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
+	printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
 }
 
 static void print_usage()
 {
-	fprintf(stdout,
-		"Usage: " PACKAGE_NAME " [options]\n"
-		"\n"
-		"Options:\n"
-		"  -h, --help               shows this help and exits\n"
-		"  -v, --version            shows version number and exits\n"
-		"  -u, --username           username for login into WordPress\n"
-		"  -w, --wpurl              URL of the WordPress installation "
-					"(without \"wp-admin\" or \"wp-login\")\n"
-		"  -o, --output-file        destination file name for downloaded XML "
-					"(default: \"wordpress.xml\")\n"
-		"      --ignore-ssl-errors  skips SSL certificate validation "
-					"(this is not a good practice!)\n"
-		"\n"
-		"  " PACKAGE_NAME " reads password from standard input or "
-		"environmental variable WPPASS.\n"
-		"  WordPress must be v2.5.0 or higher!\n"
-		"\n");
+	printf(usage_string, PACKAGE_NAME, PACKAGE_NAME);
 }
 
-
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
+	struct options options;
+	char *password;
+
+	options_parse(&options, argc, argv);
+
+	if (options.help) {
+		print_usage();
+		return 0;
+	}
+	if (options.version) {
+		print_version();
+		return 0;
+	}
+
+	password = password_resolver_resolve_password();
+
+	// perform login
+
+	memset(password, 0, strlen(password));
+	free(password);
+
+/*
 	struct options *options;
 	struct wordpress_connection *connection;
 	char *password;
 	int retval = 0;
 	bool logged;
+	char *export_url;
 
-	DEBUG("Parsing command line options...\n");
-	options = options_parse(argc, argv);
 
-	if (argc == 1 || options->help) {
-		print_usage();
-		options_free(options);
-		return 0;
-	}
-	if (options->version) {
-		print_version();
-		options_free(options);
-		return 0;
-	}
 
 	connection = wordpress_connection_initialize(options);
 	password = password_resolver_resolve_password();
@@ -86,9 +94,6 @@ int main(int argc, char **argv)
 	}
 
 
-	/* Download the export XML */
-	char *export_url;
-
 	export_url = malloc(strlen(options->wpurl) + 48);
 	strcpy(export_url, options->wpurl);
 	if (export_url[strlen(export_url) - 1] != '/') {
@@ -102,7 +107,7 @@ int main(int argc, char **argv)
 		options->output_file);
 	free(export_url);
 
-	/* TODO Check that the dump is valid */
+	// TODO Check that the dump is valid
 
 	logged = wordpress_connection_logout(connection);
 	if (!logged) {
@@ -114,4 +119,8 @@ out:
 	options_free(options);
 
 	return retval;
+*/
+
+//	options_destroy(&options);
+	return 0;
 }
