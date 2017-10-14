@@ -18,20 +18,16 @@
 #ifndef __OPTIONS_H
 #define __OPTIONS_H
 
-#include <stdbool.h>
-
 struct options
 {
 	const char *username;
 	const char *wpurl;
 	const char *output_file;
-	bool version;
-	bool help;
-	bool ignore_ssl_errors;
+	int version;
+	int help;
+	int ignore_ssl_errors;
 };
 
-struct options *options_parse(int argc, char **argv);
-
-void options_free(struct options *options);
+int options_parse(struct options *options, int argc, char **argv);
 
 #endif /* __OPTIONS_H */

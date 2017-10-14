@@ -22,7 +22,9 @@
 
 #include <wp-backup/options.h>
 
-static struct option long_options[] = {
+static const char *short_opts = "u:w:o:vh";
+
+static const struct option long_opts[] = {
 	{"username",    required_argument, 0, 'u'},
 	{"wpurl",       required_argument, 0, 'w'},
 	{"output-file", required_argument, 0, 'o'},
@@ -34,20 +36,18 @@ static struct option long_options[] = {
 
 static void getopt_parse(struct options *options, int argc, char **argv)
 {
-	int option_index = 0;
+	int opt_index = 0;
 	int c = 0;
 	const char *name;
 
 	while (c != -1) {
-		c = getopt_long(argc, argv, "u:w:o:vh", long_options,
-				&option_index);
+		c = getopt_long(argc, argv, short_opts, long_opts, &opt_index);
 
 		switch (c) {
 			case 0:
-				name = long_options[option_index].name;
-				if (!strcmp(name, "ignore-ssl-errors")) {
-					options->ignore_ssl_errors = true;
-				}
+				name = long_opts[opt_index].name;
+				if (!strcmp(name, "ignore-ssl-errors"))
+					options->ignore_ssl_errors = 1;
 				break;
 			case 'u':
 				options->username = optarg;
@@ -59,14 +59,15 @@ static void getopt_parse(struct options *options, int argc, char **argv)
 				options->output_file = optarg;
 				break;
 			case 'v':
-				options->version = true;
+				options->version = 1;
 				break;
 			case 'h':
-				options->help = true;
+				options->help = 1;
 				break;
 			case '?':
 				/* Unrecognized parameter. Error message has
-				 * been already printed by getopt. */
+				 * been already printed by getopt.
+				 */
 				exit(1);
 			default:
 				break;
@@ -74,7 +75,7 @@ static void getopt_parse(struct options *options, int argc, char **argv)
 	}
 }
 
-static void report_invalid_option(const char *message)
+static void die_on_invalid_option(const char *message)
 {
 	fprintf(stderr, "fatal: %s\n", message);
 	exit(1);
@@ -82,21 +83,24 @@ static void report_invalid_option(const char *message)
 
 static void validate_options(struct options *options)
 {
-	if (options->help ||options->version) {
+	if (options->help || options->version)
 		return;
-	}
-	if (options->username == NULL) {
-		report_invalid_option("username cannot be empty.");
-	}
-	if (options->wpurl == NULL) {
-		report_invalid_option("WordPress URL cannot be empty.");
-	}
+
+	if (!options->username)
+		die_on_invalid_option("username cannot be empty.");
+
+	if (!options->wpurl)
+		die_on_invalid_option("WordPress URL cannot be empty.");
+
 	if (strncmp(options->wpurl, "https://", 8) &&
-	    strncmp(options->wpurl, "http://", 7)) {
-		report_invalid_option("WordPress URL does not have 'http://'"
+	    strncmp(options->wpurl, "http://", 7))
+		die_on_invalid_option("WordPress URL does not have 'http://'"
 				      " or 'https://' prefix.");
-	}
-	if (options->ignore_ssl_errors) {
+
+	/* FIXME That's DIRTY. What about remove all the support for
+	 * skipping invalid SSL?
+	 */
+	if (options->ignore_ssl_errors)
 		fprintf(stderr,
 			"\x1b[33m\n"
 			"WARNING: skiping validation of SSL certificate\n"
@@ -104,27 +108,23 @@ static void validate_options(struct options *options)
 			"best to fix your server's SSL settings and not\n"
 			"use this option at all!\n"
 			"\x1b[0m\n");
-	}
 }
 
-struct options *options_parse(int argc, char **argv)
+int options_parse(struct options *options, int argc, char **argv)
 {
-	struct options *options = malloc(sizeof(struct options));
-
 	options->username = NULL;
 	options->wpurl = NULL;
 	options->output_file = "wordpress.xml";
-	options->version = false;
-	options->help = false;
-	options->ignore_ssl_errors = false;
+	options->version = 0;
+	options->help = 0;
+	options->ignore_ssl_errors = 0;
 
-	getopt_parse(options, argc, argv);
-	validate_options(options);
+	if (argc == 1) {
+		options->help = 1;
+	} else {
+		getopt_parse(options, argc, argv);
+		validate_options(options);
+	}
 
-	return options;
-}
-
-void options_free(struct options *options)
-{
-	free(options);
+	return 0;
 }
