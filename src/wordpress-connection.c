@@ -20,10 +20,9 @@
 
 #include <wp-backup.h>
 
-struct wordpress_connection
-{
+struct wordpress_connection {
 	struct http_client *http_client;
-	char *wpurl;
+	const char *wpurl;
 	char *logout_url;
 };
 
@@ -83,19 +82,19 @@ wordpress_connection_match_logout_url(struct wordpress_connection *connection,
 	}
 }
 
-struct wordpress_connection *
-wordpress_connection_initialize(struct options *options)
+struct wordpress_connection *wordpress_connection_create(const char *wpurl)
 {
 	struct wordpress_connection *connection;
 
-	connection = malloc(sizeof(struct wordpress_connection));
+	connection = malloc(sizeof(*connection));
+
 	connection->http_client = http_client_new();
-	connection->wpurl = strdup(options->wpurl);
+	connection->wpurl = wpurl;
 	connection->logout_url = NULL;
 
-	if (options->ignore_ssl_errors) {
-		http_client_skip_ssl_validation(connection->http_client);
-	}
+//	if (options->ignore_ssl_errors) {
+//		http_client_skip_ssl_validation(connection->http_client);
+//	}
 
 	return connection;
 }
@@ -103,15 +102,13 @@ wordpress_connection_initialize(struct options *options)
 void wordpress_connection_free(struct wordpress_connection *connection)
 {
 	http_client_free(connection->http_client);
-	if (connection->logout_url) {
+	if (connection->logout_url)
 		free(connection->logout_url);
-	}
-	free(connection->wpurl);
 	free(connection);
 }
 
-bool wordpress_connection_login(struct wordpress_connection *connection,
-				const char *username, const char *password)
+int wordpress_connection_login(struct wordpress_connection *connection,
+			       const char *username, const char *password)
 {
 	struct http_request *request;
 	struct http_response *response;
@@ -135,9 +132,9 @@ bool wordpress_connection_login(struct wordpress_connection *connection,
 
 	wordpress_connection_match_logout_url(connection, response);
 	if (connection->logout_url) {
-		retval = true;
+		retval = 0;
 	} else {
-		retval = false;
+		retval = 1;
 	}
 
 	http_response_free(response);

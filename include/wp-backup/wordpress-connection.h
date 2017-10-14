@@ -25,14 +25,13 @@
 struct wordpress_connection;
 
 
-struct wordpress_connection *
-wordpress_connection_initialize(struct options *options);
+struct wordpress_connection *wordpress_connection_create(const char *wpurl);
 
 void wordpress_connection_free(struct wordpress_connection *connection);
 
 
-bool wordpress_connection_login(struct wordpress_connection *connection,
-				const char *username, const char *password);
+int wordpress_connection_login(struct wordpress_connection *connection,
+			       const char *username, const char *password);
 
 bool wordpress_connection_logout(struct wordpress_connection *connection);
 
