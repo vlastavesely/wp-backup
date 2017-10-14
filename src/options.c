@@ -34,14 +34,15 @@ static const struct option long_opts[] = {
 	{0, 0, 0, 0}
 };
 
-static void getopt_parse(struct options *options, int argc, char **argv)
+static void getopt_parse(struct options *options, int argc, const char **argv)
 {
 	int opt_index = 0;
 	int c = 0;
 	const char *name;
 
 	while (c != -1) {
-		c = getopt_long(argc, argv, short_opts, long_opts, &opt_index);
+		c = getopt_long(argc, (char *const *) argv,
+				short_opts, long_opts, &opt_index);
 
 		switch (c) {
 			case 0:
@@ -110,7 +111,7 @@ static void validate_options(struct options *options)
 			"\x1b[0m\n");
 }
 
-int options_parse(struct options *options, int argc, char **argv)
+int options_parse(struct options *options, int argc, const char **argv)
 {
 	options->username = NULL;
 	options->wpurl = NULL;

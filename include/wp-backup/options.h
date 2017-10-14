@@ -18,8 +18,7 @@
 #ifndef __OPTIONS_H
 #define __OPTIONS_H
 
-struct options
-{
+struct options {
 	const char *username;
 	const char *wpurl;
 	const char *output_file;
@@ -28,6 +27,6 @@ struct options
 	int ignore_ssl_errors;
 };
 
-int options_parse(struct options *options, int argc, char **argv);
+int options_parse(struct options *options, int argc, const char **argv);
 
 #endif /* __OPTIONS_H */
