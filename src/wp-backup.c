@@ -49,7 +49,9 @@ static void print_usage()
 int main(int argc, const char **argv)
 {
 	struct options options;
+	struct wordpress_connection *connection;
 	char *password;
+	int ret;
 
 	options_parse(&options, argc, argv);
 
@@ -62,65 +64,25 @@ int main(int argc, const char **argv)
 		return 0;
 	}
 
+	connection = wordpress_connection_create(options.wpurl);
+
 	password = password_resolver_resolve_password();
 
-	// perform login
-
+	ret = wordpress_connection_login(connection, options.username, password);
 	memset(password, 0, strlen(password));
 	free(password);
 
-/*
-	struct options *options;
-	struct wordpress_connection *connection;
-	char *password;
-	int retval = 0;
-	bool logged;
-	char *export_url;
-
-
-
-	connection = wordpress_connection_initialize(options);
-	password = password_resolver_resolve_password();
-
-	logged = wordpress_connection_login(connection, options->username,
-					    password);
-	memset(password, 0, strlen(password));
-	free(password);
-
-	if (!logged) {
+	if (ret != 0) {
 		fprintf(stderr, "fatal: login failed.\n");
-		retval = 1;
-		goto out;
+		return 1;
 	}
 
-
-	export_url = malloc(strlen(options->wpurl) + 48);
-	strcpy(export_url, options->wpurl);
-	if (export_url[strlen(export_url) - 1] != '/') {
-		strcat(export_url, "/");
-	}
-	strcat(export_url, "wp-admin/export.php?content=all&download=true");
-	DEBUG("Built export URL ('%s').\n", export_url);
-
-
-	wordpress_connection_download_to_file(connection, export_url,
-		options->output_file);
-	free(export_url);
-
-	// TODO Check that the dump is valid
-
-	logged = wordpress_connection_logout(connection);
-	if (!logged) {
-		fprintf(stderr, "\x1b[33mwarning: logout failed.\x1b[0m\n");
+	if (wordpress_connection_export(connection, options.output_file) != 0) {
+		fprintf(stderr, "fatal: export failed.\n");
+		return 1;
 	}
 
-out:
-	wordpress_connection_free(connection);
-	options_free(options);
+	wordpress_connection_logout(connection);
 
-	return retval;
-*/
-
-//	options_destroy(&options);
 	return 0;
 }
