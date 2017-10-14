@@ -15,7 +15,7 @@ OBJS =	debug.o			\
 	options.o		\
 	password-resolver.o	\
 	utils.o			\
-	wordpress-connection.o
+	wordpress.o
 
 OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)
 

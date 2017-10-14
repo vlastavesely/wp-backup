@@ -15,28 +15,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __WORDPRESS_CONNECTION_H
-#define __WORDPRESS_CONNECTION_H
+#ifndef __WORDPRESS_H
+#define __WORDPRESS_H
 
 #include <stdio.h>
 #include <stdbool.h>
 #include <wp-backup/options.h>
 
-struct wordpress_connection;
+struct wordpress;
 
 
-struct wordpress_connection *wordpress_connection_create(const char *wpurl);
+struct wordpress *wordpress_create(const char *wpurl);
 
-void wordpress_connection_free(struct wordpress_connection *connection);
+void wordpress_free(struct wordpress *connection);
 
 
-int wordpress_connection_login(struct wordpress_connection *connection,
-			       const char *username, const char *password);
+int wordpress_login(struct wordpress *connection,
+		    const char *username, const char *password);
 
-bool wordpress_connection_logout(struct wordpress_connection *connection);
+bool wordpress_logout(struct wordpress *connection);
 
-void
-wordpress_connection_download_to_file(struct wordpress_connection *connection,
-				      char *url, const char *filename);
+int wordpress_export(struct wordpress *connection,
+		     const char *filename);
 
-#endif /* __WORDPRESS_CONNECTION_H */
+void wordpress_download_to_file(struct wordpress *connection, char *url,
+				const char *filename);
+
+#endif /* __WORDPRESS_H */

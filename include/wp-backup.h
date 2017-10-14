@@ -23,7 +23,7 @@
 #include <wp-backup/http-response.h>
 #include <wp-backup/http-client.h>
 #include <wp-backup/password-resolver.h>
-#include <wp-backup/wordpress-connection.h>
+#include <wp-backup/wordpress.h>
 #include <wp-backup/utils.h>
 #include <wp-backup/options.h>
 #include <wp-backup/debug.h>

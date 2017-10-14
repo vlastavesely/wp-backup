@@ -49,7 +49,7 @@ static void print_usage()
 int main(int argc, const char **argv)
 {
 	struct options options;
-	struct wordpress_connection *connection;
+	struct wordpress *wordpress;
 	char *password;
 	int ret;
 
@@ -64,11 +64,11 @@ int main(int argc, const char **argv)
 		return 0;
 	}
 
-	connection = wordpress_connection_create(options.wpurl);
+	wordpress = wordpress_create(options.wpurl);
 
 	password = password_resolver_resolve_password();
 
-	ret = wordpress_connection_login(connection, options.username, password);
+	ret = wordpress_login(wordpress, options.username, password);
 	memset(password, 0, strlen(password));
 	free(password);
 
@@ -77,12 +77,12 @@ int main(int argc, const char **argv)
 		return 1;
 	}
 
-	if (wordpress_connection_export(connection, options.output_file) != 0) {
+	if (wordpress_export(wordpress, options.output_file) != 0) {
 		fprintf(stderr, "fatal: export failed.\n");
 		return 1;
 	}
 
-	wordpress_connection_logout(connection);
+	wordpress_logout(wordpress);
 
 	return 0;
 }

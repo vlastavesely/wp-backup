@@ -20,13 +20,13 @@
 
 #include <wp-backup.h>
 
-struct wordpress_connection {
+struct wordpress {
 	struct http_client *http_client;
 	const char *wpurl;
 	char *logout_url;
 };
 
-static char *wordpress_connection_build_login_url(const char *wpurl)
+static char *wordpress_build_login_url(const char *wpurl)
 {
 	char *login_url;
 
@@ -37,8 +37,8 @@ static char *wordpress_connection_build_login_url(const char *wpurl)
 	return login_url;
 }
 
-static char *wordpress_connection_build_login_body(const char *username,
-						   const char *password)
+static char *wordpress_build_login_body(const char *username,
+					const char *password)
 {
 	char *username_encoded;
 	char *password_encoded;
@@ -62,9 +62,8 @@ static char *wordpress_connection_build_login_body(const char *username,
 	return request_body;
 }
 
-static void
-wordpress_connection_match_logout_url(struct wordpress_connection *connection,
-				      struct http_response *response)
+static void wordpress_match_logout_url(struct wordpress *connection,
+				       struct http_response *response)
 {
 	unsigned char *body = http_response_get_body(response);
 
@@ -82,9 +81,9 @@ wordpress_connection_match_logout_url(struct wordpress_connection *connection,
 	}
 }
 
-struct wordpress_connection *wordpress_connection_create(const char *wpurl)
+struct wordpress *wordpress_create(const char *wpurl)
 {
-	struct wordpress_connection *connection;
+	struct wordpress *connection;
 
 	connection = malloc(sizeof(*connection));
 
@@ -99,7 +98,7 @@ struct wordpress_connection *wordpress_connection_create(const char *wpurl)
 	return connection;
 }
 
-void wordpress_connection_free(struct wordpress_connection *connection)
+void wordpress_free(struct wordpress *connection)
 {
 	http_client_free(connection->http_client);
 	if (connection->logout_url)
@@ -107,8 +106,8 @@ void wordpress_connection_free(struct wordpress_connection *connection)
 	free(connection);
 }
 
-int wordpress_connection_login(struct wordpress_connection *connection,
-			       const char *username, const char *password)
+int wordpress_login(struct wordpress *connection, const char *username,
+		    const char *password)
 {
 	struct http_request *request;
 	struct http_response *response;
@@ -116,8 +115,8 @@ int wordpress_connection_login(struct wordpress_connection *connection,
 	char *request_body;
 	bool retval;
 
-	login_url = wordpress_connection_build_login_url(connection->wpurl);
-	request_body = wordpress_connection_build_login_body(username, password);
+	login_url = wordpress_build_login_url(connection->wpurl);
+	request_body = wordpress_build_login_body(username, password);
 
 	request = http_request_new(login_url);
 	http_request_set_method(request, HTTP_METHOD_POST);
@@ -130,7 +129,7 @@ int wordpress_connection_login(struct wordpress_connection *connection,
 	      http_response_get_code(response));
 	http_request_free(request);
 
-	wordpress_connection_match_logout_url(connection, response);
+	wordpress_match_logout_url(connection, response);
 	if (connection->logout_url) {
 		retval = 0;
 	} else {
@@ -147,7 +146,7 @@ int wordpress_connection_login(struct wordpress_connection *connection,
 	return retval;
 }
 
-bool wordpress_connection_logout(struct wordpress_connection *connection)
+bool wordpress_logout(struct wordpress *connection)
 {
 	bool retval = false;
 
@@ -175,9 +174,28 @@ bool wordpress_connection_logout(struct wordpress_connection *connection)
 	return retval;
 }
 
-void
-wordpress_connection_download_to_file(struct wordpress_connection *connection,
-				      char *url, const char *filename)
+int wordpress_export(struct wordpress *connection, const char *filename)
+{
+	char *url;
+
+	url = malloc(strlen(connection->wpurl) + 48);
+
+	strcpy(url, connection->wpurl);
+	if (url[strlen(url) - 1] != '/')
+		strcat(url, "/");
+
+	strcat(url, "wp-admin/export.php?content=all&download=true");
+
+	DEBUG("Built export URL ('%s').\n", url);
+
+	wordpress_download_to_file(connection, url, filename);
+	free(url);
+
+	return 0; // FIXME
+}
+
+void wordpress_download_to_file(struct wordpress *connection, char *url,
+				const char *filename)
 {
 	struct http_request *request;
 	struct http_response *response;
