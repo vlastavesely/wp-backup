@@ -30,14 +30,10 @@ static void print_password_prompt()
 
 static void trim_trailing_newlines(char *str)
 {
-	char *end;
+	char *last = str + strlen(str) - 1;
 
-	end = str + strlen(str) - 1;
-	while(end > str && ((char) *end == '\n' || (char) *end == '\r'))
-		end--;
-	end++;
-
-	*end = 0;
+	while (last > str && ((char) *last == '\n' || (char) *last == '\r'))
+		*(last--) = '\0';
 }
 
 char *password_resolver_resolve_password()
