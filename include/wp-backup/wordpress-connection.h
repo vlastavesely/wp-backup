@@ -36,10 +36,6 @@ int wordpress_connection_login(struct wordpress_connection *connection,
 bool wordpress_connection_logout(struct wordpress_connection *connection);
 
 void
-wordpress_connection_download_to_stream(struct wordpress_connection *connection,
-					char *url, FILE *stream);
-
-void
 wordpress_connection_download_to_file(struct wordpress_connection *connection,
 				      char *url, const char *filename);
 

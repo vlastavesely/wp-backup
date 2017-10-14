@@ -176,12 +176,14 @@ bool wordpress_connection_logout(struct wordpress_connection *connection)
 }
 
 void
-wordpress_connection_download_to_stream(struct wordpress_connection *connection,
-					char *url, FILE *stream)
+wordpress_connection_download_to_file(struct wordpress_connection *connection,
+				      char *url, const char *filename)
 {
 	struct http_request *request;
 	struct http_response *response;
+	FILE *stream;
 
+	stream = fopen(filename, "w");
 	request = http_request_new(url);
 	response = http_client_send(connection->http_client, request);
 	DEBUG("Request sent, status code is %d.\n",
@@ -192,14 +194,5 @@ wordpress_connection_download_to_stream(struct wordpress_connection *connection,
 	fwrite(body, 1, http_response_get_body_length(response), stream);
 
 	http_response_free(response);
-}
-
-void
-wordpress_connection_download_to_file(struct wordpress_connection *connection,
-				      char *url, const char *filename)
-{
-	FILE *stream;
-	stream = fopen(filename, "w");
-	wordpress_connection_download_to_stream(connection, url, stream);
 	fclose(stream);
 }
