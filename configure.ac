@@ -14,7 +14,6 @@ PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.24)
 AC_CHECK_HEADERS([stdlib.h string.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
