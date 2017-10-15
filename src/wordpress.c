@@ -73,8 +73,8 @@ static void wordpress_match_logout_url(struct wordpress *connection,
 {
 	unsigned char *body = http_response_get_body(response);
 	char *end, *wpnonce, *url;
-
 	char *ptr = strstr((const char *) body, "wp-login.php?action=logout");
+
 	if (ptr) {
 		end = strstr((const char *) ptr, "\"");
 		wpnonce = malloc(11);
@@ -86,6 +86,7 @@ static void wordpress_match_logout_url(struct wordpress *connection,
 
 		connection->logout_url = url;
 	}
+	free(body);
 }
 
 struct wordpress *wordpress_create(const char *wpurl)
