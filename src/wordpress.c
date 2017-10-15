@@ -158,28 +158,26 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 
 int wordpress_logout(struct wordpress *connection)
 {
+	struct http_request *request;
+	struct http_response *response;
 	unsigned char *body;
 	char *ptr;
 
-	if (connection->logout_url) {
-		struct http_request *request;
-		struct http_response *response;
+	if (!connection->logout_url)
+		return 1;
 
-		request = http_request_new(connection->logout_url);
-		response = http_client_send(connection->http_client, request);
+	request = http_request_new(connection->logout_url);
+	response = http_client_send(connection->http_client, request);
 
-		body = http_response_get_body(response);
+	body = http_response_get_body(response);
 
-		/* DIRTY */
-		ptr = strstr((const char *) body, "loginform");
+	/* DIRTY */
+	ptr = strstr((const char *) body, "loginform");
 
-		http_request_free(request);
-		http_response_free(response);
+	http_request_free(request);
+	http_response_free(response);
 
-		return ptr ? 0 : 1;
-	}
-
-	return 1;
+	return ptr ? 0 : 1;
 }
 
 int wordpress_download_to_file(struct wordpress *connection, char *url,
