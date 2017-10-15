@@ -23,20 +23,14 @@
 
 struct wordpress;
 
-
 struct wordpress *wordpress_create(const char *wpurl);
-
 void wordpress_free(struct wordpress *connection);
-
 
 int wordpress_login(struct wordpress *connection,
 		    const char *username, const char *password);
-
 int wordpress_logout(struct wordpress *connection);
-
 int wordpress_export(struct wordpress *connection,
 		     const char *filename);
-
 int wordpress_download_to_file(struct wordpress *connection, char *url,
 			       const char *filename);
 

@@ -20,8 +20,7 @@
 
 struct http_request;
 
-enum http_method
-{
+enum http_method {
 	HTTP_METHOD_GET = 0,
 	HTTP_METHOD_POST = 1
 };

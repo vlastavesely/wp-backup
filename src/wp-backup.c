@@ -36,12 +36,12 @@ static const char usage_string[] =
 	"environmental variable WPPASS.\n"
 	"  WordPress must be v2.5.0 or higher!\n\n";
 
-static void print_version()
+static void print_version(void)
 {
 	printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
 }
 
-static void print_usage()
+static void print_usage(void)
 {
 	printf(usage_string, PACKAGE_NAME, PACKAGE_NAME);
 }

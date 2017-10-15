@@ -26,7 +26,7 @@ struct http_client {
 	SoupSession *session;
 };
 
-struct http_client *http_client_new()
+struct http_client *http_client_new(void)
 {
 	struct http_client *client = malloc(sizeof(struct http_client));
 

@@ -23,7 +23,7 @@
 
 #include <wp-backup/password-resolver.h>
 
-static void print_password_prompt()
+static void print_password_prompt(void)
 {
 	fprintf(stderr, "Enter your WordPress password: ");
 }
@@ -36,7 +36,7 @@ static void trim_trailing_newlines(char *str)
 		*(last--) = '\0';
 }
 
-char *password_resolver_resolve_password()
+char *password_resolver_resolve_password(void)
 {
 	struct termios oflags, nflags;
 	char buffer[256];
