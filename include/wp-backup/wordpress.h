@@ -19,7 +19,6 @@
 #define __WORDPRESS_H
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <wp-backup/options.h>
 
 struct wordpress;
@@ -33,7 +32,7 @@ void wordpress_free(struct wordpress *connection);
 int wordpress_login(struct wordpress *connection,
 		    const char *username, const char *password);
 
-bool wordpress_logout(struct wordpress *connection);
+int wordpress_logout(struct wordpress *connection);
 
 int wordpress_export(struct wordpress *connection,
 		     const char *filename);

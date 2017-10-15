@@ -105,7 +105,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 	struct http_response *response;
 	char *login_url;
 	char *request_body;
-	bool retval;
+	int retval;
 
 	login_url = wordpress_build_login_url(connection->wpurl);
 	request_body = wordpress_build_login_body(username, password);
@@ -122,11 +122,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 	http_request_free(request);
 
 	wordpress_match_logout_url(connection, response);
-	if (connection->logout_url) {
-		retval = 0;
-	} else {
-		retval = 1;
-	}
+	retval = connection->logout_url ? 0 : 1;
 
 	http_response_free(response);
 
@@ -138,7 +134,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 	return retval;
 }
 
-bool wordpress_logout(struct wordpress *connection)
+int wordpress_logout(struct wordpress *connection)
 {
 	unsigned char *body;
 	char *ptr;
