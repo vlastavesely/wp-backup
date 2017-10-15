@@ -169,35 +169,40 @@ bool wordpress_logout(struct wordpress *connection)
 int wordpress_export(struct wordpress *connection, const char *filename)
 {
 	char *url = malloc(strlen(connection->wpurl) + 48);
+	int ret;
 
 	strcpy(url, connection->wpurl);
 	if (url[strlen(url) - 1] != '/')
 		strcat(url, "/");
 
 	strcat(url, "wp-admin/export.php?content=all&download=true");
-	wordpress_download_to_file(connection, url, filename);
+	ret = wordpress_download_to_file(connection, url, filename);
 	free(url);
 
-	return 0; // FIXME
+	return ret;
 }
 
-void wordpress_download_to_file(struct wordpress *connection, char *url,
-				const char *filename)
+int wordpress_download_to_file(struct wordpress *connection, char *url,
+			       const char *filename)
 {
 	struct http_request *request;
 	struct http_response *response;
-	FILE *stream;
+	FILE *fp = fopen(filename, "w");
 
-	stream = fopen(filename, "w");
-	request = http_request_new(url);
-	response = http_client_send(connection->http_client, request);
-	DEBUG("Request sent, status code is %d.\n",
-	      http_response_get_code(response));
-	http_request_free(request);
+	if (fp) {
+		request = http_request_new(url);
+		response = http_client_send(connection->http_client, request);
+		DEBUG("Request sent, status code is %d.\n",
+		      http_response_get_code(response));
+		http_request_free(request);
 
-	unsigned char *body = http_response_get_body(response);
-	fwrite(body, 1, http_response_get_body_length(response), stream);
+		unsigned char *body = http_response_get_body(response);
+		fwrite(body, 1, http_response_get_body_length(response), fp);
 
-	http_response_free(response);
-	fclose(stream);
+		http_response_free(response);
+		fclose(fp);
+		return 0;
+	}
+
+	return 1;
 }

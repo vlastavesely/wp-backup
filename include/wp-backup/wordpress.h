@@ -38,7 +38,7 @@ bool wordpress_logout(struct wordpress *connection);
 int wordpress_export(struct wordpress *connection,
 		     const char *filename);
 
-void wordpress_download_to_file(struct wordpress *connection, char *url,
-				const char *filename);
+int wordpress_download_to_file(struct wordpress *connection, char *url,
+			       const char *filename);
 
 #endif /* __WORDPRESS_H */
