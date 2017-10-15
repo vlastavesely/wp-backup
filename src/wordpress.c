@@ -53,6 +53,21 @@ static char *wordpress_build_login_body(const char *username,
 	return request_body;
 }
 
+static char *wordpress_build_export_url(const char *wpurl)
+{
+	char *url = malloc(strlen(wpurl) + 48);
+
+	/* The URL cannot be constructed by `sprintf()` in order to make
+	 * sure that it does not contain two slashes before `wp-admin`
+	 * part. If the URL is not correct, export will fail. */
+	strcpy(url, wpurl);
+	if (url[strlen(url) - 1] != '/')
+		strcat(url, "/");
+
+	strcat(url, "wp-admin/export.php?content=all&download=true");
+	return url;
+}
+
 static void wordpress_match_logout_url(struct wordpress *connection,
 				       struct http_response *response)
 {
@@ -103,18 +118,16 @@ int wordpress_login(struct wordpress *connection, const char *username,
 {
 	struct http_request *request;
 	struct http_response *response;
-	char *login_url;
+	char *url;
 	char *request_body;
 	int retval;
 
-	login_url = wordpress_build_login_url(connection->wpurl);
+	url = wordpress_build_login_url(connection->wpurl);
 	request_body = wordpress_build_login_body(username, password);
 
-	request = http_request_new(login_url);
+	request = http_request_new(url);
 	http_request_set_method(request, HTTP_METHOD_POST);
-	http_request_set_body(request, request_body,
-			      "application/x-www-form-urlencoded");
-
+	http_request_set_body(request, request_body);
 
 	response = http_client_send(connection->http_client, request);
 	http_request_free(request);
@@ -127,9 +140,19 @@ int wordpress_login(struct wordpress *connection, const char *username,
 	/* Zeroize password in the body of the request */
 	memset(request_body, 0, strlen(request_body));
 	free(request_body);
-	free(login_url);
+	free(url);
 
 	return retval;
+}
+
+int wordpress_export(struct wordpress *connection, const char *filename)
+{
+	char *url = wordpress_build_export_url(connection->wpurl);
+	int ret;
+
+	ret = wordpress_download_to_file(connection, url, filename);
+	free(url);
+	return ret;
 }
 
 int wordpress_logout(struct wordpress *connection)
@@ -158,41 +181,18 @@ int wordpress_logout(struct wordpress *connection)
 	return 1;
 }
 
-int wordpress_export(struct wordpress *connection, const char *filename)
-{
-	char *url = malloc(strlen(connection->wpurl) + 48);
-	int ret;
-
-	strcpy(url, connection->wpurl);
-	if (url[strlen(url) - 1] != '/')
-		strcat(url, "/");
-
-	strcat(url, "wp-admin/export.php?content=all&download=true");
-	ret = wordpress_download_to_file(connection, url, filename);
-	free(url);
-
-	return ret;
-}
-
 int wordpress_download_to_file(struct wordpress *connection, char *url,
 			       const char *filename)
 {
 	struct http_request *request;
 	struct http_response *response;
-	FILE *fp = fopen(filename, "w");
+	int code;
 
-	if (fp) {
-		request = http_request_new(url);
-		response = http_client_send(connection->http_client, request);
-		http_request_free(request);
-
-		unsigned char *body = http_response_get_body(response);
-		fwrite(body, 1, http_response_get_body_length(response), fp);
-
-		http_response_free(response);
-		fclose(fp);
-		return 0;
-	}
-
-	return 1;
+	request = http_request_new(url);
+	http_request_set_filename(request, (char *) filename);
+	response = http_client_send(connection->http_client, request);
+	code = http_response_get_code(response);
+	http_request_free(request);
+	http_response_free(response);
+	return code == 200 ? 0 : code;
 }

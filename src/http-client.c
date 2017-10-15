@@ -19,11 +19,9 @@
 #include <string.h>
 #include <libsoup/soup.h>
 
-#include <wp-backup/debug.h>
-#include <wp-backup/http-client.h>
+#include <wp-backup.h>
 
-struct http_client
-{
+struct http_client {
 	SoupCookieJar *cookies;
 	SoupSession *session;
 };
@@ -47,57 +45,84 @@ void http_client_free(struct http_client *client)
 }
 
 
-static char *http_client_stringify_method(struct http_request *request)
+static const char *http_client_stringify_method(struct http_request *request)
 {
-	if (http_request_get_method(request) == HTTP_METHOD_POST) {
-		return strdup("POST");
-	} else {
-		return strdup("GET");
-	}
+	return http_request_get_method(request) == HTTP_METHOD_POST
+		? "POST" : "GET";
 }
 
 static void http_client_set_body_into_message(SoupMessage *message,
 					      struct http_request *request)
 {
-	if (http_request_get_body(request)) {
-		char *body = http_request_get_body(request);
+	char *body = http_request_get_body(request);
+
+	if (body) {
 		soup_message_set_request(message,
-			http_request_get_content_type(request),
-			SOUP_MEMORY_COPY, body, strlen(body));
+			"application/x-www-form-urlencoded",
+			 SOUP_MEMORY_COPY, body, strlen(body));
 		free(body);
 	}
+}
+
+static void http_client_got_chunk(SoupMessage *message, SoupBuffer *chunk,
+				  void *data)
+{
+	const unsigned char *bytes = NULL;
+	size_t sz = 0;
+	FILE *fp = (FILE *) data;
+
+	soup_buffer_get_data(chunk, &bytes, &sz);
+	fwrite(bytes, sz, 1, fp);
 }
 
 struct http_response *http_client_send(struct http_client *client,
 				       struct http_request *request)
 {
 	SoupMessage *message;
+	struct http_response *response;
 	unsigned int code;
-	char *method;
+	const char *method;
+	FILE *fp = NULL;
 
 	method = http_client_stringify_method(request);
 	message = soup_message_new(method, http_request_get_url(request));
-	free(method);
 
 	http_client_set_body_into_message(message, request);
 
-	DEBUG("Sending a request to '%s'...\n", http_request_get_url(request));
-	code = soup_session_send_message(client->session, message);
+	if (http_request_get_filename(request)) {
+		fp = fopen(http_request_get_filename(request), "w");
 
-	/* TODO - it would be nice to allow using some callback saving
-	 * chunks directly instead of storing all the chunks in the
-	 * memory. It could be a problem for huge files. */
-	SoupBuffer *buffer;
-	unsigned char *data;
-	size_t length;
+		if (!fp)
+			return NULL;
 
-	/* Gets length and pointer to WHOLE response's body */
-	buffer = soup_message_body_flatten(message->response_body);
-	soup_buffer_get_data(buffer, (const guint8 **) &data, &length);
+		soup_message_set_flags(message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
+		g_signal_connect(G_OBJECT(message), "got-chunk",
+				 G_CALLBACK(http_client_got_chunk), fp);
 
-	struct http_response *response = http_response_new(code, data, length);
+		DEBUG("Sending a request to '%s'...\n", http_request_get_url(request));
+		code = soup_session_send_message(client->session, message);
+		DEBUG("Request sent, status code is %d.\n", code);
+
+		fclose(fp);
+		response = http_response_new(code, NULL, 0);
+	} else {
+		DEBUG("Sending a request to '%s'...\n", http_request_get_url(request));
+		code = soup_session_send_message(client->session, message);
+		DEBUG("Request sent, status code is %d.\n", code);
+
+		SoupBuffer *buffer;
+		unsigned char *data = NULL;
+		size_t sz = 0;
+
+		/* Gets length and pointer to WHOLE response's body */
+		buffer = soup_message_body_flatten(message->response_body);
+		soup_buffer_get_data(buffer, (const guint8 **) &data, &sz);
+		soup_buffer_free(buffer);
+
+		response = http_response_new(code, data, sz);
+	}
+
 	g_object_unref(message);
-	soup_buffer_free(buffer);
 
 	return response;
 }
