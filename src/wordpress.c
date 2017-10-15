@@ -117,8 +117,6 @@ int wordpress_login(struct wordpress *connection, const char *username,
 
 
 	response = http_client_send(connection->http_client, request);
-	DEBUG("Request sent, status code is %d.\n",
-	      http_response_get_code(response));
 	http_request_free(request);
 
 	wordpress_match_logout_url(connection, response);
@@ -145,8 +143,6 @@ int wordpress_logout(struct wordpress *connection)
 
 		request = http_request_new(connection->logout_url);
 		response = http_client_send(connection->http_client, request);
-		DEBUG("Request sent, status code is %d.\n",
-		      http_response_get_code(response));
 
 		body = http_response_get_body(response);
 
@@ -188,8 +184,6 @@ int wordpress_download_to_file(struct wordpress *connection, char *url,
 	if (fp) {
 		request = http_request_new(url);
 		response = http_client_send(connection->http_client, request);
-		DEBUG("Request sent, status code is %d.\n",
-		      http_response_get_code(response));
 		http_request_free(request);
 
 		unsigned char *body = http_response_get_body(response);
