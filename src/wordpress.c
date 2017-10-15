@@ -28,31 +28,22 @@ struct wordpress {
 
 static char *wordpress_build_login_url(const char *wpurl)
 {
-	char *login_url;
+	char *url = malloc(strlen(wpurl) + 16);
 
-	login_url = malloc(strlen(wpurl) + 16);
-	sprintf(login_url, "%s/wp-login.php", wpurl);
-	DEBUG("Built login URL == '%s'.\n", login_url);
-
-	return login_url;
+	sprintf(url, "%s/wp-login.php", wpurl);
+	return url;
 }
 
 static char *wordpress_build_login_body(const char *username,
 					const char *password)
 {
-	char *username_encoded;
-	char *password_encoded;
-	char *request_body;
-
-	username_encoded = urlencode(username);
-	password_encoded = urlencode(password);
-
-	request_body = malloc(32 + strlen(username_encoded)
-				 + strlen(password_encoded));
+	char *username_encoded = urlencode(username);
+	char *password_encoded = urlencode(password);
+	char *request_body = malloc(32 + strlen(username_encoded)
+				       + strlen(password_encoded));
 
 	sprintf(request_body, "log=%s&pwd=%s&redirect_to=wp-admin",
 		username_encoded, password_encoded);
-	DEBUG("Built login request == '%s'.\n", request_body);
 
 	/* Zeroize local copy of the password */
 	memset(password_encoded, 0, strlen(password_encoded));
@@ -66,18 +57,19 @@ static void wordpress_match_logout_url(struct wordpress *connection,
 				       struct http_response *response)
 {
 	unsigned char *body = http_response_get_body(response);
+	char *end, *wpnonce, *url;
 
 	char *ptr = strstr((const char *) body, "wp-login.php?action=logout");
 	if (ptr) {
-		char *end = strstr((const char *) ptr, "\"");
-		char *wpnonce = malloc(11);
+		end = strstr((const char *) ptr, "\"");
+		wpnonce = malloc(11);
 		strncpy(wpnonce, end - 10, 10);
 
-		char *logout_url = malloc(strlen(connection->wpurl) + 48);
-		sprintf(logout_url, "%s/wp-login.php?action=logout&_wpnonce=%s",
+		url = malloc(strlen(connection->wpurl) + 48);
+		sprintf(url, "%s/wp-login.php?action=logout&_wpnonce=%s",
 			connection->wpurl, wpnonce);
 
-		connection->logout_url = logout_url;
+		connection->logout_url = url;
 	}
 }
 
@@ -148,7 +140,8 @@ int wordpress_login(struct wordpress *connection, const char *username,
 
 bool wordpress_logout(struct wordpress *connection)
 {
-	bool retval = false;
+	unsigned char *body;
+	char *ptr;
 
 	if (connection->logout_url) {
 		struct http_request *request;
@@ -159,35 +152,29 @@ bool wordpress_logout(struct wordpress *connection)
 		DEBUG("Request sent, status code is %d.\n",
 		      http_response_get_code(response));
 
-		unsigned char *body = http_response_get_body(response);
+		body = http_response_get_body(response);
 
 		/* DIRTY */
-		char *ptr = strstr((const char *) body, "loginform");
-		if (ptr) {
-			retval = true;
-		}
+		ptr = strstr((const char *) body, "loginform");
 
 		http_request_free(request);
 		http_response_free(response);
+
+		return ptr ? 0 : 1;
 	}
 
-	return retval;
+	return 1;
 }
 
 int wordpress_export(struct wordpress *connection, const char *filename)
 {
-	char *url;
-
-	url = malloc(strlen(connection->wpurl) + 48);
+	char *url = malloc(strlen(connection->wpurl) + 48);
 
 	strcpy(url, connection->wpurl);
 	if (url[strlen(url) - 1] != '/')
 		strcat(url, "/");
 
 	strcat(url, "wp-admin/export.php?content=all&download=true");
-
-	DEBUG("Built export URL ('%s').\n", url);
-
 	wordpress_download_to_file(connection, url, filename);
 	free(url);
 
