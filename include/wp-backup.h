@@ -19,6 +19,13 @@
 #define __WP_BACKUP_H
 
 #include <config.h>
+
+#ifdef __DEBUG
+#define DEBUG(...) fprintf(stderr, PACKAGE_NAME ": " __VA_ARGS__)
+#else
+#define DEBUG(...)
+#endif
+
 #include <wp-backup/http-request.h>
 #include <wp-backup/http-response.h>
 #include <wp-backup/http-client.h>
@@ -26,6 +33,5 @@
 #include <wp-backup/wordpress.h>
 #include <wp-backup/utils.h>
 #include <wp-backup/options.h>
-#include <wp-backup/debug.h>
 
 #endif /* __WP_BACKUP_H */

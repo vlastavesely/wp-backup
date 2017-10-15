@@ -8,8 +8,7 @@ INCDIR       = include
 BUILDDIR     = build
 OBJDIR       = build/obj
 
-OBJS =	debug.o			\
-	http-client.o		\
+OBJS =	http-client.o		\
 	http-request.o		\
 	http-response.o		\
 	options.o		\
