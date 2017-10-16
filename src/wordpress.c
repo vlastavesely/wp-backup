@@ -17,6 +17,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include <wp-backup.h>
 
@@ -26,11 +27,21 @@ struct wordpress {
 	char *logout_url;
 };
 
-static char *wordpress_build_login_url(const char *wpurl)
+static char *wordpress_build_url(const char *wpurl, const char *path)
 {
-	char *url = malloc(strlen(wpurl) + 16);
+	char *url = malloc(strlen(wpurl) + strlen(path) + 2);
+	assert(path[0] == '/');
 
-	sprintf(url, "%s/wp-login.php", wpurl);
+	strcpy(url, wpurl);
+	/*
+	 * The URL must not contain two slashes after root of the
+	 * wordpress installation! We must generate proper URL with
+	 * just one slash inside in order to prevent unexpected fail
+	 * of exporting a dump.
+	 */
+	if (url[strlen(wpurl) - 1] == '/')
+		url[strlen(wpurl) - 1] = '\0';
+	strcat(url, path);
 	return url;
 }
 
@@ -53,38 +64,29 @@ static char *wordpress_build_login_body(const char *username,
 	return request_body;
 }
 
-static char *wordpress_build_export_url(const char *wpurl)
-{
-	char *url = malloc(strlen(wpurl) + 48);
-
-	/* The URL cannot be constructed by `sprintf()` in order to make
-	 * sure that it does not contain two slashes before `wp-admin`
-	 * part. If the URL is not correct, export will fail. */
-	strcpy(url, wpurl);
-	if (url[strlen(url) - 1] != '/')
-		strcat(url, "/");
-
-	strcat(url, "wp-admin/export.php?content=all&download=true");
-	return url;
-}
-
 static void wordpress_match_logout_url(struct wordpress *connection,
 				       struct http_response *response)
 {
 	unsigned char *body = http_response_get_body(response);
-	char *end, *wpnonce, *url;
-	char *ptr = strstr((const char *) body, "wp-login.php?action=logout");
+	const char *ptr = NULL;
+	char *path;
 
+	ptr = strstr((const char *) body, "/wp-login.php?action=logout");
 	if (ptr) {
-		end = strstr((const char *) ptr, "\"");
-		wpnonce = malloc(11);
-		strncpy(wpnonce, end - 10, 10);
+		*(strstr(ptr, "\"")) = 0;
 
-		url = malloc(strlen(connection->wpurl) + 48);
-		sprintf(url, "%s/wp-login.php?action=logout&_wpnonce=%s",
-			connection->wpurl, wpnonce);
-
-		connection->logout_url = url;
+		/*
+		 * We do need match the `wpnonce` token here and build
+		 * the logout URL on our own since we cannot rely on its
+		 * format. It may contain escaped ampersand or another
+		 * entities and thus, it may not be a valid URL without
+		 * decoding or other fixes.
+		 */
+		path = malloc(50);
+		sprintf(path, "/wp-login.php?action=logout&_wpnonce=%s",
+			strstr(ptr, "_wpnonce") + 9);
+		connection->logout_url = wordpress_build_url(connection->wpurl, path);
+		free(path);
 	}
 	free(body);
 }
@@ -123,7 +125,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 	char *request_body;
 	int retval;
 
-	url = wordpress_build_login_url(connection->wpurl);
+	url = wordpress_build_url(connection->wpurl, "/wp-login.php");
 	request_body = wordpress_build_login_body(username, password);
 
 	request = http_request_new(url);
@@ -148,9 +150,11 @@ int wordpress_login(struct wordpress *connection, const char *username,
 
 int wordpress_export(struct wordpress *connection, const char *filename)
 {
-	char *url = wordpress_build_export_url(connection->wpurl);
+	char *url;
 	int ret;
 
+	url = wordpress_build_url(connection->wpurl,
+			"/wp-admin/export.php?content=all&download=true");
 	ret = wordpress_download_to_file(connection, url, filename);
 	free(url);
 	return ret;
