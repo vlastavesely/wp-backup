@@ -18,6 +18,6 @@
 #ifndef __UTILS_H
 #define __UTILS_H
 
-char *urlencode(const char *url);
+void urlencode_to_buf(const char *str, char *buf);
 
 #endif /* __UTILS_H */

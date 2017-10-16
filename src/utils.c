@@ -27,16 +27,9 @@ static char byte_to_hex(char code)
 	return hex[code & 15];
 }
 
-/* http://www.geekhideout.com/urlcode.shtml */
-char *urlencode(const char *url)
+/* Inspired by: http://www.geekhideout.com/urlcode.shtml */
+void urlencode_to_buf(const char *pstr, char *pbuf)
 {
-	const char *pstr = url;
-	char *buf;
-	char *pbuf;
-
-	buf = malloc(strlen(url) * 3 + 1);
-	pbuf = buf;
-
 	while (*pstr) {
 		if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' ||
 		    *pstr == '.' || *pstr == '~') {
@@ -51,6 +44,4 @@ char *urlencode(const char *url)
 		pstr++;
 	}
 	*pbuf = '\0';
-
-	return buf;
 }

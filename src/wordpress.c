@@ -48,20 +48,14 @@ static char *wordpress_build_url(const char *wpurl, const char *path)
 static char *wordpress_build_login_body(const char *username,
 					const char *password)
 {
-	char *username_encoded = urlencode(username);
-	char *password_encoded = urlencode(password);
-	char *request_body = malloc(32 + strlen(username_encoded)
-				       + strlen(password_encoded));
-
-	sprintf(request_body, "log=%s&pwd=%s&redirect_to=wp-admin",
-		username_encoded, password_encoded);
-
-	/* Zeroize local copy of the password */
-	memset(password_encoded, 0, strlen(password_encoded));
-	free(password_encoded);
-	free(username_encoded);
-
-	return request_body;
+	char *body = malloc(32 + (strlen(username) * 3)
+			       + (strlen(password) * 3) + 1);
+	strcpy(body, "log=");
+	urlencode_to_buf(username, body + strlen(body));
+	strcat(body, "&pwd=");
+	urlencode_to_buf(password, body + strlen(body));
+	strcat(body, "&redirect_to=wp-admin");
+	return body;
 }
 
 static void wordpress_match_logout_url(struct wordpress *connection,
