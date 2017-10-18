@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include <wp-backup.h>
 
@@ -36,14 +37,26 @@ static const char usage_string[] =
 	"environmental variable WPPASS.\n"
 	"  WordPress must be v2.5.0 or higher!\n\n";
 
+void die_on_error(const char *err, ...)
+{
+	va_list args;
+
+	va_start(args, err);
+	vfprintf(stderr, err, args);
+	va_end(args);
+	exit(-1);
+}
+
 static void print_version(void)
 {
 	printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
+	exit(-1);
 }
 
 static void print_usage(void)
 {
 	printf(usage_string, PACKAGE_NAME, PACKAGE_NAME);
+	exit(-1);
 }
 
 int main(int argc, const char **argv)
@@ -55,14 +68,11 @@ int main(int argc, const char **argv)
 
 	options_parse(&options, argc, argv);
 
-	if (options.help) {
+	if (options.help)
 		print_usage();
-		return 0;
-	}
-	if (options.version) {
+
+	if (options.version)
 		print_version();
-		return 0;
-	}
 
 	wordpress = wordpress_create(options.wpurl);
 
@@ -72,15 +82,11 @@ int main(int argc, const char **argv)
 	memset(password, 0, strlen(password));
 	free(password);
 
-	if (ret != 0) {
-		fprintf(stderr, "fatal: login failed.\n");
-		return 1;
-	}
+	if (ret != 0)
+		die_on_error("fatal: login failed.\n");
 
-	if (wordpress_export(wordpress, options.output_file) != 0) {
-		fprintf(stderr, "fatal: export failed.\n");
-		return 1;
-	}
+	if (wordpress_export(wordpress, options.output_file) != 0)
+		die_on_error("fatal: export failed.\n");
 
 	wordpress_logout(wordpress);
 
