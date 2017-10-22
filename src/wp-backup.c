@@ -88,7 +88,8 @@ int main(int argc, const char **argv)
 	if (wordpress_export(wordpress, options.output_file) != 0)
 		die_on_error("fatal: export failed.\n");
 
-	wordpress_logout(wordpress);
+	if (wordpress_logout(wordpress) != 0)
+		die_on_error("fatal: logout failed.\n");
 
 	return 0;
 }
