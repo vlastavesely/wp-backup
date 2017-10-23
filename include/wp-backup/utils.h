@@ -19,5 +19,6 @@
 #define __UTILS_H
 
 void urlencode_to_buf(const char *str, char *buf);
+void html_decode_entities_to_buf(const char *str, char *buf);
 
 #endif /* __UTILS_H */
