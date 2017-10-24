@@ -17,6 +17,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <ctype.h>
 
 #include <wp-backup/utils.h>
@@ -48,6 +49,8 @@ void urlencode_to_buf(const char *pstr, char *pbuf)
 
 static void pack_unicode_char(char **dest, unsigned long c)
 {
+	assert(c <= 0x10ffff);
+
 	if (c <= 0x00007f) {
 		*(*dest)   = c;
 	} else if (c <= 0x0007ff) {
@@ -67,11 +70,11 @@ static void pack_unicode_char(char **dest, unsigned long c)
 
 static void decode_named_entity(char **dest, const char *src)
 {
-	if (!strncmp(src, "amp", 3))
+	if (!strncmp(src, "amp;", 4))
 		*(*dest) = '&';
-	else if (!strncmp(src, "lt", 2))
+	else if (!strncmp(src, "lt;", 3))
 		*(*dest) = '<';
-	else if (!strncmp(src, "gt", 2))
+	else if (!strncmp(src, "gt;", 3))
 		*(*dest) = '>';
 	else
 		/* TODO add all other common entities */
