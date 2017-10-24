@@ -119,11 +119,15 @@ int wordpress_login(struct wordpress *connection, const char *username,
 
 int wordpress_export(struct wordpress *connection, const char *filename)
 {
+	struct http_response *response;
 	char *url;
 	int ret;
 
 	url = wordpress_build_url(connection->wpurl, "/wp-admin/export.php?content=all&download=true");
-	ret = wordpress_download_to_file(connection, url, filename);
+	response = wordpress_download_to_file(connection, url, filename);
+	ret = (response->code != 200 && strstr(response->content_type, "/xml"));
+
+	http_response_free(response);
 	free(url);
 	return ret;
 }
@@ -148,16 +152,16 @@ int wordpress_logout(struct wordpress *connection)
 	return ptr == NULL;
 }
 
-int wordpress_download_to_file(struct wordpress *connection, const char *url,
-		const char *filename)
+struct http_response *wordpress_download_to_file(struct wordpress *connection,
+		const char *url, const char *filename)
 {
 	struct http_request *request;
-	int code;
+	struct http_response *response;
 
 	request = http_request_new();
 	request->url = strdup(url);
-	code = http_client_download_file(connection->http_client, request, filename);
+	response = http_client_download_file(connection->http_client, request, filename);
 	http_request_free(request);
 
-	return code;
+	return response;
 }
