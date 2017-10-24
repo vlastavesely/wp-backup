@@ -18,14 +18,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
 
 #include <wp-backup.h>
 
 static const char usage_string[] =
-	"Usage: %s [options]\n"
+	PACKAGE_NAME " [options]\n"
 	"\n"
-	"Options:\n"
+	"options:\n"
 	"  -h, --help               shows this help and exits\n"
 	"  -v, --version            shows version number and exits\n"
 	"  -u, --username           username for login into WordPress\n"
@@ -33,30 +32,20 @@ static const char usage_string[] =
 	"  -o, --output-file        destination file name for downloaded XML (default: \"wordpress.xml\")\n"
 	"      --ignore-ssl-errors  skips SSL certificate validation (this is not a good practice!)\n"
 	"\n"
-	"  %s reads password from standard input or "
+	"  " PACKAGE_NAME " reads password from standard input or "
 	"environmental variable WPPASS.\n"
-	"  WordPress must be v2.5.0 or higher!\n\n";
+	"  WordPress must be v2.5.0 or higher!\n";
 
-void die_on_error(const char *err, ...)
+static void print_usage(void)
 {
-	va_list args;
-
-	va_start(args, err);
-	vfprintf(stderr, err, args);
-	va_end(args);
-	exit(-1);
+	printf("%s\n", usage_string);
+	exit(129);
 }
 
 static void print_version(void)
 {
 	printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
-	exit(-1);
-}
-
-static void print_usage(void)
-{
-	printf(usage_string, PACKAGE_NAME, PACKAGE_NAME);
-	exit(-1);
+	exit(129);
 }
 
 int main(int argc, const char **argv)
@@ -83,13 +72,13 @@ int main(int argc, const char **argv)
 	free(password);
 
 	if (ret != 0)
-		die_on_error("fatal: login failed.\n");
+		fatal("login failed.\n");
 
 	if (wordpress_export(wordpress, options.output_file) != 0)
-		die_on_error("fatal: export failed.\n");
+		fatal("export failed.\n");
 
 	if (wordpress_logout(wordpress) != 0)
-		die_on_error("fatal: logout failed.\n");
+		fatal("logout failed.\n");
 
 	return 0;
 }
