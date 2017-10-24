@@ -8,7 +8,7 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
-PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.24)
+PKG_CHECK_MODULES(CURL, libcurl)
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h termios.h unistd.h])

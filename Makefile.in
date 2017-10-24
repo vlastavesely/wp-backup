@@ -1,6 +1,6 @@
 CC = @CC@
-CFLAGS = @CFLAGS@ @SOUP_CFLAGS@ -Wall -I. -Iinclude
-LIBS = @LIBS@ @SOUP_LIBS@
+CFLAGS = @CFLAGS@ @CURL_CFLAGS@ -Wall -I. -Iinclude
+LIBS = @LIBS@ @CURL_LIBS@
 
 TARGET       = wp-backup
 SRCDIR       = src
