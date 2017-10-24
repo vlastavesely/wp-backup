@@ -17,13 +17,18 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <assert.h>
-#include <libsoup/soup.h>
+#include <curl/curl.h>
 #include <wp-backup.h>
 
 struct http_client {
-	SoupCookieJar *cookies;
-	SoupSession *session;
+	char *cookiejar;
+};
+
+struct string_buffer {
+	char *data;
+	size_t nbytes;
 };
 
 struct http_client *http_client_new(void)
@@ -31,16 +36,16 @@ struct http_client *http_client_new(void)
 	struct http_client *client;
 
 	client = malloc(sizeof(*client));
-	client->session = soup_session_new();
-	client->cookies = soup_cookie_jar_new();
-	soup_session_add_feature(client->session, SOUP_SESSION_FEATURE(client->cookies));
+	client->cookiejar = strdup("/tmp/wp-backup-cookies.txt");
 	return client;
 }
 
 void http_client_free(struct http_client *client)
 {
-	g_object_unref(client->session);
-	g_object_unref(client->cookies);
+	if (client->cookiejar) {
+		unlink(client->cookiejar);
+		free(client->cookiejar);
+	}
 	free(client);
 }
 
@@ -72,6 +77,7 @@ static struct http_response *http_response_new()
 	response->code = 0;
 	response->body = NULL;
 	response->length = 0;
+	response->content_type = NULL;
 	return response;
 }
 
@@ -79,81 +85,117 @@ void http_response_free(struct http_response *response)
 {
 	if (response->body)
 		free(response->body);
+	if (response->content_type)
+		free(response->content_type);
 	free(response);
 }
 
-static SoupMessage *http_client_build_soup_message(struct http_request *request)
+static void string_buffer_init(struct string_buffer *str)
 {
-	SoupMessage *message;
-
-	assert(request->url != NULL);
-
-	if ((message = soup_message_new(request->method, request->url)) == NULL)
-		fatal("failed to parse URL '%s'.", request->url);
-	if (request->body)
-		soup_message_set_request(message, "application/x-www-form-urlencoded",
-			SOUP_MEMORY_COPY, request->body, strlen(request->body));
-	return message;
+	str->data = NULL;
+	str->nbytes = 0;
 }
 
-static int http_client_send_soup_message(struct http_client *client,
-		 SoupMessage *message)
+static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
+	struct string_buffer *str)
 {
-	int code;
+	size_t length = str->nbytes + (size * nmemb);
 
-	DEBUG("Sending a request to '%s'...\n",
-		soup_uri_to_string(soup_message_get_uri(message), FALSE));
-	code = soup_session_send_message(client->session, message);
-	DEBUG("Request sent, status code is %d.\n", code);
-	return code;
+	str->data = realloc(str->data, length + 1);
+	if (!str->data)
+		fatal("failed to realloc() string buffer.");
+
+	memcpy(str->data + str->nbytes, ptr, size * nmemb);
+	str->data[length] = '\0';
+	str->nbytes = length;
+
+	return size * nmemb;
+}
+
+static CURL *http_curl_new(struct http_client *client,
+		struct http_request *request)
+{
+	CURL *curl;
+
+	if ((curl = curl_easy_init()) == NULL)
+		fatal("failed to initialize cURL context.");
+
+	curl_easy_setopt(curl, CURLOPT_URL, request->url);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, client->cookiejar);
+	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, client->cookiejar);
+
+	if (strcmp(request->method, "POST") == 0) {
+		assert(request->body != NULL);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request->body);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(request->body));
+	}
+
+	return curl;
+}
+
+static struct http_response *http_curl_perform(CURL *curl)
+{
+	struct http_response *response;
+	unsigned int http_code = 0;
+	const char *content_type = NULL;
+
+	if (curl_easy_perform(curl) == CURLE_HTTP_RETURNED_ERROR)
+		fatal("failed to get response from the server.");
+
+	if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code) != 0)
+		fatal("failed to fetch HTTP status code from response.");
+
+	if (curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &content_type) != 0)
+		fatal("failed to fetch content-type from response.");
+
+	response = http_response_new();
+	response->code = http_code;
+	response->content_type = strdup(content_type);
+	return response;
 }
 
 struct http_response *http_client_send(struct http_client *client,
 		struct http_request *request)
 {
-	SoupMessage *message = http_client_build_soup_message(request);
 	struct http_response *response;
-	SoupBuffer *buffer;
+	struct string_buffer str;
+	CURL *curl;
 
-	response =http_response_new();
-	response->code = http_client_send_soup_message(client, message);
+	string_buffer_init(&str);
+	curl = http_curl_new(client, request);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, str_buffer_append);
 
-	buffer = soup_message_body_flatten(message->response_body);
-	soup_buffer_get_data(buffer, (const unsigned char **) &(response->body),
-			     &(response->length));
-	soup_buffer_free(buffer);
+	DEBUG("Sending a request to '%s'...\n", request->url);
+	response = http_curl_perform(curl);
+	DEBUG("Request sent, status code is %d.\n", response->code);
+	response->body = str.data; /* Take over the string, won't be freed */
+
+	curl_easy_cleanup(curl);
 	return response;
 }
 
-static void http_client_got_chunk(SoupMessage *message, SoupBuffer *chunk,
-		void *data)
-{
-	const unsigned char *bytes = NULL;
-	size_t sz = 0;
-	FILE *fp = (FILE *) data;
-
-	soup_buffer_get_data(chunk, &bytes, &sz);
-	fwrite(bytes, sz, 1, fp);
-}
-
-int http_client_download_file(struct http_client *client,
+struct http_response *http_client_download_file(struct http_client *client,
 		struct http_request *request,
 		const char *filename)
 {
-	SoupMessage *message = http_client_build_soup_message(request);
-	int code;
+	struct http_response *response;
+	CURL *curl;
 	FILE *fp;
 
 	if ((fp = fopen(filename, "w")) == NULL)
 		fatal("failed to open file '%s' for writing.", filename);
 
-	/* Do not accumulate downloaded data in the memory. */
-	soup_message_set_flags(message, SOUP_MESSAGE_OVERWRITE_CHUNKS);
-	g_signal_connect(G_OBJECT(message), "got-chunk",
-			 G_CALLBACK(http_client_got_chunk), fp);
+	curl = http_curl_new(client, request);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 
-	code = http_client_send_soup_message(client, message);
+	DEBUG("Downloading file from '%s'...\n", request->url);
+	response = http_curl_perform(curl);
+	DEBUG("File download completed, status code is %d.\n", response->code);
+
 	fclose(fp);
-
-	return code == 200 ? 0 : code;
+	curl_easy_cleanup(curl);
+	return response;
 }

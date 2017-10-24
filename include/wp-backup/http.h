@@ -30,6 +30,7 @@ struct http_response {
 	int code;
 	char *body;
 	size_t length;
+	char *content_type;
 };
 
 struct http_client *http_client_new(void);
@@ -43,7 +44,7 @@ void http_response_free(struct http_response *response);
 struct http_response *http_client_send(struct http_client *client,
 		struct http_request *request);
 
-int http_client_download_file(struct http_client *client,
+struct http_response *http_client_download_file(struct http_client *client,
 		struct http_request *request,
 		const char *filename);
 
