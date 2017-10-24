@@ -21,15 +21,16 @@
 #include <getopt.h>
 
 #include <wp-backup/options.h>
+#include <wp-backup/error.h>
 
-static const char *short_opts = "u:w:o:vh";
+static const char *short_opts = "hvu:w:o:";
 
 static const struct option long_opts[] = {
+	{"help",        no_argument,       0, 'h'},
+	{"version",     no_argument,       0, 'v'},
 	{"username",    required_argument, 0, 'u'},
 	{"wpurl",       required_argument, 0, 'w'},
 	{"output-file", required_argument, 0, 'o'},
-	{"version",     no_argument,       0, 'v'},
-	{"help",        no_argument,       0, 'h'},
 	{"ignore-ssl-errors", no_argument, 0, 0},
 	{0, 0, 0, 0}
 };
@@ -40,6 +41,7 @@ static void getopt_parse(struct options *options, int argc, const char **argv)
 	int c = 0;
 	const char *name;
 
+	opterr = 0; /* disable auto error message */
 	while (c != -1) {
 		c = getopt_long(argc, (char *const *) argv,
 				short_opts, long_opts, &opt_index);
@@ -66,20 +68,14 @@ static void getopt_parse(struct options *options, int argc, const char **argv)
 			options->help = 1;
 			break;
 		case '?':
-			/* Unrecognized parameter. Error message has
-			 * been already printed by getopt.
-			 */
-			exit(1);
+			if (optopt)
+				fatal("unrecognized option '-%c'", optopt);
+			else
+				fatal("unrecognized option '%s'", argv[optind - 1]);
 		default:
 			break;
 		}
 	}
-}
-
-static void die_on_invalid_option(const char *message)
-{
-	fprintf(stderr, "fatal: %s\n", message);
-	exit(1);
 }
 
 static void validate_options(struct options *options)
@@ -88,27 +84,23 @@ static void validate_options(struct options *options)
 		return;
 
 	if (!options->username)
-		die_on_invalid_option("username cannot be empty.");
+		fatal("username cannot be empty.");
 
 	if (!options->wpurl)
-		die_on_invalid_option("WordPress URL cannot be empty.");
+		fatal("WordPress URL cannot be empty.");
 
 	if (strncmp(options->wpurl, "https://", 8) &&
 	    strncmp(options->wpurl, "http://", 7))
-		die_on_invalid_option("WordPress URL does not have 'http://'"
-				      " or 'https://' prefix.");
+		fatal("WordPress URL does not have 'http://' or 'https://' prefix.");
 
 	/* FIXME That's DIRTY. What about remove all the support for
 	 * skipping invalid SSL?
 	 */
 	if (options->ignore_ssl_errors)
-		fprintf(stderr,
-			"\x1b[33m\n"
-			"WARNING: skiping validation of SSL certificate\n"
+		warning("skiping validation of SSL certificate\n"
 			"is considered to be a risk. You should do your\n"
 			"best to fix your server's SSL settings and not\n"
-			"use this option at all!\n"
-			"\x1b[0m\n");
+			"use this option at all!\n");
 }
 
 int options_parse(struct options *options, int argc, const char **argv)
