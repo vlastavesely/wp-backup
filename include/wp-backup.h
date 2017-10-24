@@ -26,12 +26,11 @@
 #define DEBUG(...)
 #endif
 
-#include <wp-backup/http-request.h>
-#include <wp-backup/http-response.h>
-#include <wp-backup/http-client.h>
+#include <wp-backup/http.h>
 #include <wp-backup/password-resolver.h>
 #include <wp-backup/wordpress.h>
 #include <wp-backup/utils.h>
+#include <wp-backup/error.h>
 #include <wp-backup/options.h>
 
 #endif /* __WP_BACKUP_H */

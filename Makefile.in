@@ -1,5 +1,5 @@
 CC = @CC@
-CFLAGS = @CFLAGS@ @SOUP_CFLAGS@ -Wall -I. -Iinclude -pedantic
+CFLAGS = @CFLAGS@ @SOUP_CFLAGS@ -Wall -I. -Iinclude
 LIBS = @LIBS@ @SOUP_LIBS@
 
 TARGET       = wp-backup
@@ -8,12 +8,11 @@ INCDIR       = include
 BUILDDIR     = build
 OBJDIR       = build/obj
 
-OBJS =	http-client.o		\
-	http-request.o		\
-	http-response.o		\
+OBJS =	http.o			\
 	options.o		\
 	password-resolver.o	\
 	utils.o			\
+	error.o			\
 	wordpress.o
 
 OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)

@@ -61,28 +61,14 @@ static char *wordpress_build_login_body(const char *username,
 static void wordpress_match_logout_url(struct wordpress *connection,
 				       struct http_response *response)
 {
-	unsigned char *body = http_response_get_body(response);
 	const char *ptr = NULL;
-	char *path;
+	char path[128];
 
-	ptr = strstr((const char *) body, "/wp-login.php?action=logout");
-	if (ptr) {
+	if ((ptr = strstr(response->body, "/wp-login.php?action=logout"))) {
 		*(strstr(ptr, "\"")) = 0;
-
-		/*
-		 * We do need match the `wpnonce` token here and build
-		 * the logout URL on our own since we cannot rely on its
-		 * format. It may contain escaped ampersand or another
-		 * entities and thus, it may not be a valid URL without
-		 * decoding or other fixes.
-		 */
-		path = malloc(50);
-		sprintf(path, "/wp-login.php?action=logout&_wpnonce=%s",
-			strstr(ptr, "_wpnonce") + 9);
+		html_decode_entities_to_buf(ptr, path);
 		connection->logout_url = wordpress_build_url(connection->wpurl, path);
-		free(path);
 	}
-	free(body);
 }
 
 struct wordpress *wordpress_create(const char *wpurl)
@@ -90,14 +76,11 @@ struct wordpress *wordpress_create(const char *wpurl)
 	struct wordpress *connection;
 
 	connection = malloc(sizeof(*connection));
-
 	connection->http_client = http_client_new();
 	connection->wpurl = wpurl;
 	connection->logout_url = NULL;
-
-//	if (options->ignore_ssl_errors) {
-//		http_client_skip_ssl_validation(connection->http_client);
-//	}
+	/* if (options->ignore_ssl_errors)
+	 *	http_client_skip_ssl_validation(connection->http_client); */
 
 	return connection;
 }
@@ -111,33 +94,25 @@ void wordpress_free(struct wordpress *connection)
 }
 
 int wordpress_login(struct wordpress *connection, const char *username,
-		    const char *password)
+		const char *password)
 {
 	struct http_request *request;
 	struct http_response *response;
-	char *url;
-	char *request_body;
 	int retval;
 
-	url = wordpress_build_url(connection->wpurl, "/wp-login.php");
-	request_body = wordpress_build_login_body(username, password);
-
-	request = http_request_new(url);
-	http_request_set_method(request, HTTP_METHOD_POST);
-	http_request_set_body(request, request_body);
+	request = http_request_new();
+	request->method = "POST";
+	request->url = wordpress_build_url(connection->wpurl, "/wp-login.php");
+	request->body = wordpress_build_login_body(username, password);
 
 	response = http_client_send(connection->http_client, request);
-	http_request_free(request);
-
 	wordpress_match_logout_url(connection, response);
 	retval = connection->logout_url ? 0 : 1;
 
-	http_response_free(response);
-
 	/* Zeroize password in the body of the request */
-	memset(request_body, 0, strlen(request_body));
-	free(request_body);
-	free(url);
+	memset(request->body, 0, strlen(request->body));
+	http_request_free(request);
+	http_response_free(response);
 
 	return retval;
 }
@@ -147,8 +122,7 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	char *url;
 	int ret;
 
-	url = wordpress_build_url(connection->wpurl,
-			"/wp-admin/export.php?content=all&download=true");
+	url = wordpress_build_url(connection->wpurl, "/wp-admin/export.php?content=all&download=true");
 	ret = wordpress_download_to_file(connection, url, filename);
 	free(url);
 	return ret;
@@ -158,38 +132,32 @@ int wordpress_logout(struct wordpress *connection)
 {
 	struct http_request *request;
 	struct http_response *response;
-	unsigned char *body;
-	char *ptr;
+	const char *ptr = NULL;
 
-	if (!connection->logout_url)
-		return 1;
+	if (connection->logout_url == NULL)
+		fatal("failed to logout - logout URL missing.");
 
-	request = http_request_new(connection->logout_url);
+	request = http_request_new();
+	request->url = connection->logout_url;
 	response = http_client_send(connection->http_client, request);
-
-	body = http_response_get_body(response);
-
-	/* DIRTY */
-	ptr = strstr((const char *) body, "loginform");
+	ptr = strstr((const char *) response->body, "loginform"); /* DIRTY */
 
 	http_request_free(request);
 	http_response_free(response);
 
-	return ptr ? 0 : 1;
+	return ptr == NULL;
 }
 
-int wordpress_download_to_file(struct wordpress *connection, char *url,
-			       const char *filename)
+int wordpress_download_to_file(struct wordpress *connection, const char *url,
+		const char *filename)
 {
 	struct http_request *request;
-	struct http_response *response;
 	int code;
 
-	request = http_request_new(url);
-	http_request_set_filename(request, (char *) filename);
-	response = http_client_send(connection->http_client, request);
-	code = http_response_get_code(response);
+	request = http_request_new();
+	request->url = strdup(url);
+	code = http_client_download_file(connection->http_client, request, filename);
 	http_request_free(request);
-	http_response_free(response);
-	return code == 200 ? 0 : code;
+
+	return code;
 }
