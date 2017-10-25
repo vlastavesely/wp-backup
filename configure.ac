@@ -8,8 +8,8 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
-PKG_CHECK_MODULES(cURL, libcurl)
-PKG_CHECK_MODULES(libxml2, libxml-2.0)
+PKG_CHECK_MODULES(CURL, libcurl)
+PKG_CHECK_MODULES(LIBXML, libxml-2.0)
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h termios.h unistd.h])

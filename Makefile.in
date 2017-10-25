@@ -1,6 +1,6 @@
 CC = @CC@
-CFLAGS = @CFLAGS@ @CURL_CFLAGS@ -Wall -I. -Iinclude
-LIBS = @LIBS@ @CURL_LIBS@
+CFLAGS = @CFLAGS@ @LIBXML_CFLAGS@ @CURL_CFLAGS@ -Wall -I. -Iinclude
+LIBS =  @LIBXML_LIBS@ @CURL_LIBS@
 
 TARGET       = wp-backup
 SRCDIR       = src
@@ -13,7 +13,8 @@ OBJS =	http.o			\
 	password-resolver.o	\
 	utils.o			\
 	error.o			\
-	wordpress.o
+	wordpress.o		\
+	wxr-feed.o
 
 OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)
 
