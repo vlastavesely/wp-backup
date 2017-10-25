@@ -15,23 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __WP_BACKUP_H
-#define __WP_BACKUP_H
+#ifndef __WXR_FEED_H
+#define __WXR_FEED_H
 
-#include <config.h>
+struct wxr_feed;
 
-#ifdef __DEBUG
-#define DEBUG(...) fprintf(stderr, PACKAGE_NAME ": " __VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
+struct wxr_feed *wxr_feed_load(const char *filename);
+void wxr_feed_free(struct wxr_feed *feed);
 
-#include <wp-backup/http.h>
-#include <wp-backup/password-resolver.h>
-#include <wp-backup/wordpress.h>
-#include <wp-backup/wxr-feed.h>
-#include <wp-backup/utils.h>
-#include <wp-backup/error.h>
-#include <wp-backup/options.h>
-
-#endif /* __WP_BACKUP_H */
+#endif /* __WXR_FEED_H */

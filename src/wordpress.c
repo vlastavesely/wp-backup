@@ -155,6 +155,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 int wordpress_export(struct wordpress *connection, const char *filename)
 {
 	struct http_response *response;
+	struct wxr_feed *feed;
 	char *url;
 	int ret;
 
@@ -162,11 +163,13 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	response = wordpress_download_to_file(connection, url, filename);
 
 	/*
-	 * TODO: parse the feed by libxml2 to ensure that download
-	 * was a success.
+	 * Tries to load downloaded XML. If data are corrupted, it
+	 * will fail
 	 */
+	feed = wxr_feed_load(filename);
 	ret = (response->code != 200 && strstr(response->content_type, "/xml"));
 
+	wxr_feed_free(feed);
 	http_response_free(response);
 	free(url);
 	return ret;

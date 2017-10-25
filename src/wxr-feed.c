@@ -15,23 +15,35 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __WP_BACKUP_H
-#define __WP_BACKUP_H
-
-#include <config.h>
-
-#ifdef __DEBUG
-#define DEBUG(...) fprintf(stderr, PACKAGE_NAME ": " __VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
-
-#include <wp-backup/http.h>
-#include <wp-backup/password-resolver.h>
-#include <wp-backup/wordpress.h>
-#include <wp-backup/wxr-feed.h>
-#include <wp-backup/utils.h>
+#include <stdlib.h>
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
 #include <wp-backup/error.h>
-#include <wp-backup/options.h>
+#include <wp-backup/wxr-feed.h>
 
-#endif /* __WP_BACKUP_H */
+struct wxr_feed {
+	xmlDoc *doc;
+	xmlNode *rss;
+};
+
+struct wxr_feed *wxr_feed_load(const char *filename)
+{
+	struct wxr_feed *feed;
+
+	feed = malloc(sizeof(*feed));
+	feed->doc = xmlReadFile(filename, NULL, XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+
+	if (feed->doc == NULL)
+		fatal("failed to load WXR feed.");
+
+	feed->rss = xmlDocGetRootElement(feed->doc);
+
+	return feed;
+}
+
+void wxr_feed_free(struct wxr_feed *feed)
+{
+	xmlFreeDoc(feed->doc);
+	xmlCleanupParser();
+	free(feed);
+}
