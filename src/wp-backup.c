@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <wp-backup.h>
+#include "wp-backup.h"
 
 static const char usage_string[] =
 	PACKAGE_NAME " [options]\n"

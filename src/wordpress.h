@@ -15,23 +15,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __WP_BACKUP_H
-#define __WP_BACKUP_H
+#ifndef __WORDPRESS_H
+#define __WORDPRESS_H
 
-#include <config.h>
+#include <stdio.h>
 
-#ifdef __DEBUG
-#define DEBUG(...) fprintf(stderr, PACKAGE_NAME ": " __VA_ARGS__)
-#else
-#define DEBUG(...)
-#endif
+struct wordpress;
 
-#include <wp-backup/http.h>
-#include <wp-backup/password-resolver.h>
-#include <wp-backup/wordpress.h>
-#include <wp-backup/wxr-feed.h>
-#include <wp-backup/utils.h>
-#include <wp-backup/error.h>
-#include <wp-backup/options.h>
+struct wordpress *wordpress_create(const char *wpurl);
+void wordpress_free(struct wordpress *connection);
 
-#endif /* __WP_BACKUP_H */
+int wordpress_login(struct wordpress *connection,
+		const char *username, const char *password);
+int wordpress_logout(struct wordpress *connection);
+int wordpress_export(struct wordpress *connection,
+		const char *filename);
+struct http_response *wordpress_download_to_file(struct wordpress *connection,
+		const char *url, const char *filename);
+
+#endif /* __WORDPRESS_H */

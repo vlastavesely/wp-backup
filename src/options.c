@@ -20,8 +20,8 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <wp-backup/options.h>
-#include <wp-backup/error.h>
+#include "options.h"
+#include "error.h"
 
 static const char *short_opts = "hvu:w:o:";
 

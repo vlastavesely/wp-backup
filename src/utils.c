@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include <wp-backup/utils.h>
+#include "utils.h"
 
 static char byte_to_hex(char code)
 {

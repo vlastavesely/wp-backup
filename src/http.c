@@ -20,7 +20,10 @@
 #include <unistd.h>
 #include <assert.h>
 #include <curl/curl.h>
-#include <wp-backup.h>
+
+#include "http.h"
+#include "debug.h"
+#include "error.h"
 
 /*
  * Structure for session data storage. It holds data we need between

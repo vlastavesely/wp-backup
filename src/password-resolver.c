@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include <wp-backup/password-resolver.h>
+#include "password-resolver.h"
 
 static void print_password_prompt(void)
 {

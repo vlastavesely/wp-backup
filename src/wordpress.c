@@ -19,7 +19,11 @@
 #include <string.h>
 #include <assert.h>
 
-#include <wp-backup.h>
+#include "wordpress.h"
+#include "http.h"
+#include "wxr-feed.h"
+#include "utils.h"
+#include "error.h"
 
 /*
  * This structure represents a connection to a remote WordPress
