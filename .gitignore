@@ -1,6 +1,8 @@
 # Build and temporary files
-/build
+/wp-backup
+/tests/test
 *.o
+*.d
 *~
 
 # Distribution files
