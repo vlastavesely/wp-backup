@@ -29,22 +29,22 @@ static char byte_to_hex(char code)
 }
 
 /* Inspired by: http://www.geekhideout.com/urlcode.shtml */
-void urlencode_to_buf(const char *pstr, char *pbuf)
+void urlencode_to_buf(const char *str, char *buf)
 {
-	while (*pstr) {
-		if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' ||
-		    *pstr == '.' || *pstr == '~') {
-			*pbuf++ = *pstr;
-		} else if (*pstr == ' ') {
-			*pbuf++ = '+';
+	while (*str) {
+		if (isalnum(*str) || *str == '-' || *str == '_' ||
+		    *str == '.' || *str == '~') {
+			*buf++ = *str;
+		} else if (*str == ' ') {
+			*buf++ = '+';
 		} else {
-			*pbuf++ = '%';
-			*pbuf++ = byte_to_hex(*pstr >> 4);
-			*pbuf++ = byte_to_hex(*pstr & 15);
+			*buf++ = '%';
+			*buf++ = byte_to_hex(*str >> 4);
+			*buf++ = byte_to_hex(*str & 15);
 		}
-		pstr++;
+		str++;
 	}
-	*pbuf = '\0';
+	*buf = '\0';
 }
 
 static void pack_unicode_char(char **dest, unsigned long c)
