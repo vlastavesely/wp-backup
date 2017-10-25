@@ -22,6 +22,10 @@
 #include <curl/curl.h>
 #include <wp-backup.h>
 
+/*
+ * Structure for session data storage. It holds data we need between
+ * multiple HTTP requests sent.
+ */
 struct http_client {
 	char *cookiejar;
 };
@@ -36,7 +40,11 @@ struct http_client *http_client_new(void)
 	struct http_client *client;
 
 	client = malloc(sizeof(*client));
+	/*
+	 * TODO: Generate random filename
+	 */
 	client->cookiejar = strdup("/tmp/wp-backup-cookies.txt");
+
 	return client;
 }
 
@@ -112,6 +120,9 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 	return size * nmemb;
 }
 
+/*
+ * Initializes default cURL context from request data.
+ */
 static CURL *http_curl_new(struct http_client *client,
 		struct http_request *request)
 {
@@ -123,7 +134,11 @@ static CURL *http_curl_new(struct http_client *client,
 	curl_easy_setopt(curl, CURLOPT_URL, request->url);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+
+	/* Read cookies from this file. */
 	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, client->cookiejar);
+
+	/* Save cookies to this file after `curl_easy_cleanup()` called. */
 	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, client->cookiejar);
 
 	if (strcmp(request->method, "POST") == 0) {
@@ -156,6 +171,9 @@ static struct http_response *http_curl_perform(CURL *curl)
 	return response;
 }
 
+/*
+ * Sends a request to a server and returns body of the response.
+ */
 struct http_response *http_client_send(struct http_client *client,
 		struct http_request *request)
 {
@@ -171,12 +189,21 @@ struct http_response *http_client_send(struct http_client *client,
 	DEBUG("Sending a request to '%s'...\n", request->url);
 	response = http_curl_perform(curl);
 	DEBUG("Request sent, status code is %d.\n", response->code);
-	response->body = str.data; /* Take over the string, won't be freed */
+
+	/*
+	 * Response takes over the string, it won't be freed here
+	 * but with freeing of the response.
+	 */
+	response->body = str.data;
 
 	curl_easy_cleanup(curl);
 	return response;
 }
 
+/*
+ * Sends a request to a server and saves downloaded data into a file.
+ * Returns a HTTP response with metadata and empty body.
+ */
 struct http_response *http_client_download_file(struct http_client *client,
 		struct http_request *request,
 		const char *filename)
