@@ -19,7 +19,25 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memset strdup strstr])
+AC_CHECK_FUNCS([memset strdup strstr strchr strtoul])
+AC_FUNC_REALLOC
+
+# Enable for gcov if option --enable-gcov is present.
+AC_MSG_CHECKING([whether gcov should be enabled])
+AC_ARG_ENABLE(gcov,
+	AS_HELP_STRING([--enable-gcov], [enable gcov code coverage analysis]), [
+	if test "x$enableval" != "xno" ; then
+		if test "$GCC" != "yes"; then
+			AC_MSG_ERROR([gcc is required for --enable-gcov])
+		fi
+		AC_MSG_RESULT(yes)
+		COVERAGE_CFLAGS="-O0 -g -fno-inline -fprofile-arcs -ftest-coverage"
+	else
+		AC_MSG_RESULT(no)
+		COVERAGE_CFLAGS=""
+	fi
+], [AC_MSG_RESULT(no)])
+AC_SUBST(COVERAGE_CFLAGS)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
