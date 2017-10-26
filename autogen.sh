@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-autoreconf --install
+autoreconf --install --verbose
