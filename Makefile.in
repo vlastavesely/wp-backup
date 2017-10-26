@@ -1,57 +1,48 @@
+PROGNAME := wp-backup
+
+SRCFILES := $(shell find src -type f -name "*.c")
+OBJFILES := $(patsubst %.c, %.o, $(SRCFILES))
+TEST_SRCFILES := $(shell find tests -type f -name "*.c")
+TEST_OBJFILES := $(patsubst %.c, %.o, $(TEST_SRCFILES))
+TEST_OBJFILES += $(filter-out src/wp-backup.o, $(OBJFILES))
+
 CC = @CC@
-CFLAGS = @CFLAGS@ @LIBXML_CFLAGS@ @CURL_CFLAGS@ -Wall -I. -Iinclude
-LIBS =  @LIBXML_LIBS@ @CURL_LIBS@
 
-TARGET       = wp-backup
-SRCDIR       = src
-INCDIR       = include
-BUILDDIR     = build
-OBJDIR       = build/obj
+CFLAGS := @CFLAGS@ @LIBXML_CFLAGS@ @CURL_CFLAGS@ -I.
+CFLAGS += @DEBUG_CFLAGS@
+LIBS := @LIBXML_LIBS@ @CURL_LIBS@
+LDFLAGS := $(LIBS)
 
-OBJS =	http.o			\
-	options.o		\
-	password-resolver.o	\
-	utils.o			\
-	error.o			\
-	wordpress.o		\
-	wxr-feed.o
-
-OBJECTS = $(OBJS:%.o=$(OBJDIR)/%.o)
+.PHONY: all install uninstall clean distclean test
 
 
-.PHONY: all install uninstall dist clean
+all: $(PROGNAME)
 
-all: $(BUILDDIR)/$(TARGET)
+test: tests/test
+	tests/test
+
+$(PROGNAME): $(OBJFILES)
+	$(CC) $(LDFLAGS) $^ -o $(PROGNAME)
+
+tests/test: $(TEST_OBJFILES)
+	$(CC) $(LDFLAGS) $^ -o tests/test -lcunit
+
+%.o: %.c Makefile
+	$(CC) $(CFLAGS) $(LIBS) -MMD -MP -c $< -o $@
 
 install:
-ifeq ("$(wildcard $(BUILDDIR)/$(TARGET))", "")
-	$(error "Application has not been compiled yet. Run `make`.")
-endif
-	cp -f $(BUILDDIR)/$(TARGET) /usr/bin/wp-backup
-	chmod +x /usr/bin/wp-backup
+	cp -f $(PROGNAME) /usr/$(PROGNAME)
+	chmod +x /usr/bin/$(PROGNAME)
 
 uninstall:
-	rm -f /usr/bin/wp-backup
-
-$(BUILDDIR)/$(TARGET): $(OBJECTS) $(SRCDIR)/wp-backup.c include/wp-backup.h
-	$(CC) $(SRCDIR)/wp-backup.c $(OBJECTS) $(CFLAGS) $(LIBS) $(DEBUG) -o $@
-
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c	\
-		$(INCDIR)/wp-backup/%.h		\
-		include/wp-backup.h
-	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) $(LIBS) $(DEBUG) -c $< -o $@
-
-dist:	clean
-	cd ..; \
-	tar cfvz $(TARGET)/$(TARGET).tar.gz --exclude=$(TARGET)/test.sh	\
-		$(TARGET)/*
+	$(RM) -f /usr/bin/wp-backup
 
 clean:
-	rm -rf $(BUILDDIR) $(TARGET).tar.gz
-	rm -rf autom4te.cache
-	rm -f aclocal.m4 config.log stamp-h1
-	rm -f compile config.status configure install-sh missing
-	rm -f config.h* config.make
-	rm -f *.gcda *.gcno
-	rm -f Makefile
+	$(RM) -f *.d */*.d *.o */*.o $(PROGNAME) tests/test
+	$(RM) -f *.gcda */*.gcda *.gcno */*.gcno
+
+distclean: clean
+	$(RM) -rf autom4te.cache aclocal.m4
+	$(RM) -f autoscan.log configure.scan
+	$(RM) -f config.* configure install-sh
+	$(RM) -f Makefile
