@@ -39,5 +39,20 @@ AC_ARG_ENABLE(gcov,
 ], [AC_MSG_RESULT(no)])
 AC_SUBST(COVERAGE_CFLAGS)
 
+# Enable debugging
+AC_MSG_CHECKING([whether debugging should be enabled])
+AC_ARG_ENABLE(debug,
+	AS_HELP_STRING([--enable-debug], [enable debugging]), [
+	if test "x$enableval" != "xno" ; then
+		AC_MSG_RESULT(yes)
+		DEBUG_CFLAGS="-D__DEBUG"
+	else
+		AC_MSG_RESULT(no)
+		DEBUG_CFLAGS=""
+	fi
+], [AC_MSG_RESULT(no)])
+AC_SUBST(DEBUG_CFLAGS)
+
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
