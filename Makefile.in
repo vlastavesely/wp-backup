@@ -9,7 +9,7 @@ TEST_OBJFILES += $(filter-out src/wp-backup.o, $(OBJFILES))
 CC = @CC@
 
 CFLAGS := @CFLAGS@ @LIBXML_CFLAGS@ @CURL_CFLAGS@ -I.
-CFLAGS += @DEBUG_CFLAGS@
+CFLAGS += @DEBUG_CFLAGS@ @COVERAGE_CFLAGS@
 LIBS := @LIBXML_LIBS@ @CURL_LIBS@
 LDFLAGS := $(LIBS)
 
@@ -22,10 +22,10 @@ test: tests/test
 	tests/test
 
 $(PROGNAME): $(OBJFILES)
-	$(CC) $(LDFLAGS) $^ -o $(PROGNAME)
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $(PROGNAME)
 
 tests/test: $(TEST_OBJFILES)
-	$(CC) $(LDFLAGS) $^ -o tests/test -lcunit
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o tests/test -lcunit
 
 %.o: %.c Makefile
 	$(CC) $(CFLAGS) $(LIBS) -MMD -MP -c $< -o $@
@@ -38,8 +38,8 @@ uninstall:
 	$(RM) -f /usr/bin/wp-backup
 
 clean:
-	$(RM) -f *.d */*.d *.o */*.o $(PROGNAME) tests/test
-	$(RM) -f *.gcda */*.gcda *.gcno */*.gcno
+	$(RM) -f */*.d */*.o $(PROGNAME) tests/test
+	$(RM) -f */*.gcda */*.gcno
 
 distclean: clean
 	$(RM) -rf autom4te.cache aclocal.m4
