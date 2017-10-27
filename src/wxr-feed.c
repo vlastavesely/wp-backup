@@ -32,10 +32,9 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 	struct wxr_feed *feed;
 
 	feed = malloc(sizeof(*feed));
-	feed->doc = xmlReadFile(filename, NULL, XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
-
-	if (feed->doc == NULL)
-		fatal("failed to load WXR feed.");
+	if ((feed->doc = xmlReadFile(filename, NULL,
+	   XML_PARSE_NOERROR | XML_PARSE_NOWARNING)) == NULL)
+		return NULL;
 
 	feed->rss = xmlDocGetRootElement(feed->doc);
 

@@ -167,11 +167,11 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	response = wordpress_download_to_file(connection, url, filename);
 
 	/*
-	 * Tries to load downloaded XML. If data are corrupted, it
-	 * will fail
+	 * Tries to load downloaded XML to check its validity.
+	 * If the data are corrupted, download failed.
 	 */
 	feed = wxr_feed_load(filename);
-	ret = (response->code != 200 && strstr(response->content_type, "/xml"));
+	ret = (feed == NULL || response->code != 200);
 
 	wxr_feed_free(feed);
 	http_response_free(response);
