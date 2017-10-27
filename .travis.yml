@@ -1,0 +1,10 @@
+language: c
+compiler:
+  - gcc
+before_install:
+  - pip install --user cpp-coveralls
+script:
+  - sudo apt-get install libcunit1-dev
+  - ./autogen.sh && ./configure --enable-gcov && make && make test
+after_success:
+  - coveralls --exclude tests --gcov-options '\-lp'
