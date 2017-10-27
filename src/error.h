@@ -18,6 +18,9 @@
 #ifndef __ERROR_H
 #define __ERROR_H
 
+void set_warning_routine(void (*routine)(const char *warn, va_list params));
+void set_fatal_routine(void (*routine)(const char *err, va_list params));
+
 void warning(const char *err, ...);
 void fatal(const char *err, ...);
 
