@@ -23,6 +23,7 @@
 #include "http.h"
 #include "wxr-feed.h"
 #include "utils.h"
+#include "error.h"
 #include "error-handler.h"
 
 /*
@@ -160,6 +161,7 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 {
 	struct http_response *response;
 	struct wxr_feed *feed;
+	struct error *error = NULL;
 	char *url;
 	int ret;
 
@@ -170,7 +172,10 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	 * Tries to load downloaded XML to check its validity.
 	 * If the data are corrupted, download failed.
 	 */
-	feed = wxr_feed_load(filename);
+	feed = wxr_feed_load(filename, &error);
+	if (error) {
+		fatal(error->message);
+	}
 	ret = (feed == NULL || response->code != 200);
 
 	if (feed)

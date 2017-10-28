@@ -18,9 +18,14 @@
 #ifndef __WXR_FEED_H
 #define __WXR_FEED_H
 
+#include "error.h"
+
+#define WXR_FEED_ERROR_INVALID_XML 1
+#define WXR_FEED_ERROR_MISSING_SIGNATURE 2
+
 struct wxr_feed;
 
-struct wxr_feed *wxr_feed_load(const char *filename);
+struct wxr_feed *wxr_feed_load(const char *filename, struct error **error);
 void wxr_feed_free(struct wxr_feed *feed);
 
 #endif /* __WXR_FEED_H */
