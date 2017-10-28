@@ -16,6 +16,8 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 
@@ -27,6 +29,25 @@ struct wxr_feed {
 	xmlNode *rss;
 };
 
+static bool wxr_feed_has_signature_comment(xmlNode *node)
+{
+	xmlChar *content;
+	const char *ptr;
+
+	while (node->prev && node->prev->type == XML_COMMENT_NODE) {
+		node = node->prev;
+
+		content = xmlNodeGetContent(node);
+		ptr = strstr(content, "This is a WordPress eXtended RSS file");
+		xmlFree(content);
+
+		if (ptr)
+			return true;
+	}
+
+	return false;
+}
+
 struct wxr_feed *wxr_feed_load(const char *filename)
 {
 	struct wxr_feed *feed;
@@ -37,8 +58,11 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 		return NULL;
 
 	feed->rss = xmlDocGetRootElement(feed->doc);
+	if (wxr_feed_has_signature_comment(feed->rss))
+		return feed;
 
-	return feed;
+	wxr_feed_free(feed);
+	return NULL;
 }
 
 void wxr_feed_free(struct wxr_feed *feed)

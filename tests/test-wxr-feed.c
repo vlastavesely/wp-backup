@@ -25,9 +25,13 @@ static void test_wxr_feed_wxr_feed_load()
 
 	create_test_wxr_feed_mock("<valid><xml/></valid>");
 	feed = wxr_feed_load(test_wxr_feed_filename);
+	CU_ASSERT_PTR_NULL(feed);
+
+	create_test_wxr_feed_mock("<!-- This is a WordPress eXtended RSS file -->"
+		"<rss><xml/></rss>");
+	feed = wxr_feed_load(test_wxr_feed_filename);
 	CU_ASSERT_PTR_NOT_NULL(feed);
 	wxr_feed_free(feed);
-
 }
 
 void test_wxr_feed_add_tests(struct CU_Suite *suite)

@@ -173,7 +173,9 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	feed = wxr_feed_load(filename);
 	ret = (feed == NULL || response->code != 200);
 
-	wxr_feed_free(feed);
+	if (feed)
+		wxr_feed_free(feed);
+
 	http_response_free(response);
 	free(url);
 	return ret;
