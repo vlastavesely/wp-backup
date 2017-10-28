@@ -15,8 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ERROR_H
-#define __ERROR_H
+#ifndef __ERROR_HANDLER_H
+#define __ERROR_HANDLER_H
 
 void set_warning_routine(void (*routine)(const char *warn, va_list params));
 void set_fatal_routine(void (*routine)(const char *err, va_list params));
@@ -24,4 +24,4 @@ void set_fatal_routine(void (*routine)(const char *err, va_list params));
 void warning(const char *err, ...);
 void fatal(const char *err, ...);
 
-#endif /* __USAGE_H */
+#endif /* __ERROR_HANDLER_H */

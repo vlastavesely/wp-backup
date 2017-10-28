@@ -23,6 +23,6 @@
 #include "options.h"
 #include "wordpress.h"
 #include "password-resolver.h"
-#include "error.h"
+#include "error-handler.h"
 
 #endif /* __WP_BACKUP_H */

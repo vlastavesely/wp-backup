@@ -21,7 +21,7 @@
 #include <getopt.h>
 
 #include "options.h"
-#include "error.h"
+#include "error-handler.h"
 
 static const char *short_opts = "hvu:w:o:";
 

@@ -3,7 +3,7 @@
 
 #include "test-password-resolver.h"
 #include "test-wxr-feed.h"
-#include "test-error.h"
+#include "test-error-handler.h"
 #include "test-utils.h"
 
 int main(int argc, const char **argv)
@@ -16,7 +16,7 @@ int main(int argc, const char **argv)
 
 	test_password_resolver_add_tests(suite);
 	test_wxr_feed_add_tests(suite);
-	test_error_add_tests(suite);
+	test_error_handler_add_tests(suite);
 	test_utils_add_tests(suite);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
