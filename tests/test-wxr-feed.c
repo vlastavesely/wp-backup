@@ -39,6 +39,17 @@ static void test_wxr_feed_wxr_feed_load_fail()
 	CU_ASSERT_STRING_EQUAL("File does not contain signature comment.",
 			       error->message);
 	error_free(error);
+
+	/* Root is not 'rss' */
+	create_test_wxr_feed_mock("<!-- This is a WordPress eXtended RSS file -->"
+		"<valid><xml/></valid>");
+	feed = wxr_feed_load(test_wxr_feed_filename, &error);
+	CU_ASSERT_PTR_NULL(feed);
+	CU_ASSERT_EQUAL(WXR_FEED_ERROR_ROOT_IS_NOT_RSS,
+			error->code);
+	CU_ASSERT_STRING_EQUAL("Root element is not 'rss'.",
+			       error->message);
+	error_free(error);
 }
 
 static void test_wxr_feed_wxr_feed_load_success()

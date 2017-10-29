@@ -67,6 +67,13 @@ struct wxr_feed *wxr_feed_load(const char *filename, struct error **error)
 		return NULL;
 	}
 
+	if (strcmp("rss", feed->rss->name)) {
+		*error = error_new(WXR_FEED_ERROR_ROOT_IS_NOT_RSS,
+				   "Root element is not 'rss'.");
+		wxr_feed_free(feed);
+		return NULL;
+	}
+
 	return feed;
 }
 
