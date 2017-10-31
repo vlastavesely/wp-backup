@@ -36,7 +36,8 @@ static const struct option long_opts[] = {
 	{0, 0, 0, 0}
 };
 
-static void getopt_parse(struct options *options, int argc, const char **argv)
+static void getopt_parse(struct options *options, int argc, const char **argv,
+			 struct error **error)
 {
 	int opt_index = 0;
 	int c = 0;
@@ -69,42 +70,42 @@ static void getopt_parse(struct options *options, int argc, const char **argv)
 			options->help = true;
 			break;
 		case '?':
-			if (optopt)
-				fatal("unrecognized option '-%c'", optopt);
-			else
-				fatal("unrecognized option '%s'", argv[optind - 1]);
+			*error = error_new(OPTIONS_ERROR_UNRECOGNIZED_ARGUMENT,
+				"unrecognized option '-%s'.", optopt ?
+				(char *) &(optopt) : argv[optind - 1] + 1);
 		default:
 			break;
 		}
 	}
 }
 
-static void validate_options(struct options *options)
+static void validate_options(struct options *options, struct error **error)
 {
-	if (options->help || options->version)
+	if (*error || options->help || options->version)
 		return;
 
-	if (!options->username)
-		fatal("username cannot be empty.");
+	if (!options->username) {
+		*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
+			"username cannot be empty.");
+		return;
+	}
 
-	if (!options->wpurl)
-		fatal("WordPress URL cannot be empty.");
+	if (!options->wpurl) {
+		*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
+			"WordPress URL cannot be empty.");
+		return;
+	}
 
 	if (strncmp(options->wpurl, "https://", 8) &&
-	    strncmp(options->wpurl, "http://", 7))
-		fatal("WordPress URL does not have 'http://' or 'https://' prefix.");
-
-	/* FIXME That's DIRTY. What about remove all the support for
-	 * skipping invalid SSL?
-	 */
-	if (options->ignore_ssl_errors)
-		warning("skiping validation of SSL certificate\n"
-			"is considered to be a risk. You should do your\n"
-			"best to fix your server's SSL settings and not\n"
-			"use this option at all!\n");
+	    strncmp(options->wpurl, "http://", 7)) {
+		*error = error_new(OPTIONS_ERROR_BAD_ARGUMENT_VALUE,
+			"WordPress URL does not have 'http://' or 'https://' prefix.");
+		return;
+	}
 }
 
-int options_parse(struct options *options, int argc, const char **argv)
+int options_parse(struct options *options, int argc, const char **argv,
+		  struct error **error)
 {
 	options->username = NULL;
 	options->wpurl = NULL;
@@ -116,8 +117,8 @@ int options_parse(struct options *options, int argc, const char **argv)
 	if (argc == 1) {
 		options->help = 1;
 	} else {
-		getopt_parse(options, argc, argv);
-		validate_options(options);
+		getopt_parse(options, argc, argv, error);
+		validate_options(options, error);
 	}
 
 	return 0;

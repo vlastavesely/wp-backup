@@ -44,4 +44,5 @@ void error_free(struct error *error)
 	if (error->message)
 		free(error->message);
 	free(error);
+	error = NULL;
 }

@@ -51,17 +51,31 @@ static void print_version(void)
 int main(int argc, const char **argv)
 {
 	struct options options;
+	struct error *error = NULL;
 	struct wordpress *wordpress;
 	char *password;
 	int ret;
 
-	options_parse(&options, argc, argv);
+	options_parse(&options, argc, argv, &error);
+
+	if (error)
+		fatal("%s", error->message);
 
 	if (options.help)
 		print_usage();
 
 	if (options.version)
 		print_version();
+
+	
+	/* FIXME That's DIRTY. What about remove all the support for
+	 * skipping invalid SSL?
+	 */
+	if (options.ignore_ssl_errors)
+		warning("skiping validation of SSL certificate\n"
+			"is considered to be a risk. You should do your\n"
+			"best to fix your server's SSL settings and not\n"
+			"use this option at all!\n");
 
 	wordpress = wordpress_create(options.wpurl);
 

@@ -18,6 +18,8 @@
 #ifndef __OPTIONS_H
 #define __OPTIONS_H
 
+#include "error.h"
+
 struct options {
 	const char *username;
 	const char *wpurl;
@@ -27,8 +29,11 @@ struct options {
 	int ignore_ssl_errors;
 };
 
-int options_parse(struct options *options, int argc, const char **argv);
+#define OPTIONS_ERROR_UNRECOGNIZED_ARGUMENT 1
+#define OPTIONS_ERROR_MISSING_ARGUMENT 2
+#define OPTIONS_ERROR_BAD_ARGUMENT_VALUE 3
 
-void print_options_help(void);
+int options_parse(struct options *options, int argc, const char **argv,
+		  struct error **error);
 
 #endif /* __OPTIONS_H */
