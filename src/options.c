@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <getopt.h>
 
 #include "options.h"
@@ -50,7 +51,7 @@ static void getopt_parse(struct options *options, int argc, const char **argv)
 		case 0:
 			name = long_opts[opt_index].name;
 			if (!strcmp(name, "ignore-ssl-errors"))
-				options->ignore_ssl_errors = 1;
+				options->ignore_ssl_errors = true;
 			break;
 		case 'u':
 			options->username = optarg;
@@ -62,10 +63,10 @@ static void getopt_parse(struct options *options, int argc, const char **argv)
 			options->output_file = optarg;
 			break;
 		case 'v':
-			options->version = 1;
+			options->version = true;
 			break;
 		case 'h':
-			options->help = 1;
+			options->help = true;
 			break;
 		case '?':
 			if (optopt)
@@ -108,9 +109,9 @@ int options_parse(struct options *options, int argc, const char **argv)
 	options->username = NULL;
 	options->wpurl = NULL;
 	options->output_file = "wordpress.xml";
-	options->version = 0;
-	options->help = 0;
-	options->ignore_ssl_errors = 0;
+	options->version = false;
+	options->help = false;
+	options->ignore_ssl_errors = false;
 
 	if (argc == 1) {
 		options->help = 1;
