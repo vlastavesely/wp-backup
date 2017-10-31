@@ -159,7 +159,7 @@ static struct http_response *http_curl_perform(CURL *curl)
 	unsigned int http_code = 0;
 	const char *content_type = NULL;
 
-	if (curl_easy_perform(curl) == CURLE_HTTP_RETURNED_ERROR)
+	if (curl_easy_perform(curl) != CURLE_OK)
 		fatal("failed to get response from the server.");
 
 	if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code) != 0)
