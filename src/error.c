@@ -41,8 +41,7 @@ struct error *error_new(int code, const char *err, ...)
 
 void error_free(struct error *error)
 {
-	if (error->message)
-		free(error->message);
+	free(error->message);
 	free(error);
 	error = NULL;
 }
