@@ -8,7 +8,7 @@ static void getopt_reset(void)
 	optind = 0;
 }
 
-static void test_options_options_parse_usage()
+static void test_options_options_parse_usage(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -19,7 +19,7 @@ static void test_options_options_parse_usage()
 	CU_ASSERT_TRUE(options.help);
 }
 
-static void test_options_options_parse_help_explicit()
+static void test_options_options_parse_help_explicit(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -30,7 +30,7 @@ static void test_options_options_parse_help_explicit()
 	CU_ASSERT_TRUE(options.help);
 }
 
-static void test_options_options_parse_version_explicit()
+static void test_options_options_parse_version_explicit(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -41,7 +41,7 @@ static void test_options_options_parse_version_explicit()
 	CU_ASSERT_TRUE(options.version);
 }
 
-static void test_options_options_parse_missing_username()
+static void test_options_options_parse_missing_username(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -55,7 +55,7 @@ static void test_options_options_parse_missing_username()
 	error_free(error);
 }
 
-static void test_options_options_parse_missing_wpurl()
+static void test_options_options_parse_missing_wpurl(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -69,7 +69,7 @@ static void test_options_options_parse_missing_wpurl()
 	error_free(error);
 }
 
-static void test_options_options_parse_bad_wpurl()
+static void test_options_options_parse_bad_wpurl(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -84,7 +84,7 @@ static void test_options_options_parse_bad_wpurl()
 	error_free(error);
 }
 
-static void test_options_options_parse_missing_unrecognized()
+static void test_options_options_parse_missing_unrecognized(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -98,7 +98,7 @@ static void test_options_options_parse_missing_unrecognized()
 	error_free(error);
 }
 
-static void test_options_options_parse_short()
+static void test_options_options_parse_short(void)
 {
 	struct options options;
 	struct error *error = NULL;
@@ -115,7 +115,7 @@ static void test_options_options_parse_short()
 	CU_ASSERT_STRING_EQUAL("wp.xml", options.output_file);
 }
 
-static void test_options_options_parse_long()
+static void test_options_options_parse_long(void)
 {
 	struct options options;
 	struct error *error = NULL;

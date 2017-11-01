@@ -2,7 +2,7 @@
 
 #include "../src/error.h"
 
-static void test_error_error()
+static void test_error_error(void)
 {
 	struct error *error;
 

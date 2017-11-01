@@ -15,7 +15,7 @@ static void create_test_wxr_feed_mock(const char *xml)
 	fclose(fp);
 }
 
-static void test_wxr_feed_wxr_feed_load_fail()
+static void test_wxr_feed_wxr_feed_load_fail(void)
 {
 	struct wxr_feed *feed;
 	struct error *error;
@@ -52,7 +52,7 @@ static void test_wxr_feed_wxr_feed_load_fail()
 	error_free(error);
 }
 
-static void test_wxr_feed_wxr_feed_load_success()
+static void test_wxr_feed_wxr_feed_load_success(void)
 {
 	struct wxr_feed *feed;
 	struct error *error;

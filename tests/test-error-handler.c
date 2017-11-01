@@ -14,14 +14,14 @@ static void test_fatal_routine(const char *err, va_list params)
 	vsnprintf(buffer, sizeof(buffer), err, params);
 }
 
-static void test_error_handler_warning()
+static void test_error_handler_warning(void)
 {
 	set_warning_routine(test_warning_routine);
 	warning("Some warning.");
 	CU_ASSERT_STRING_EQUAL("Some warning.", buffer);
 }
 
-static void test_error_handler_fatal()
+static void test_error_handler_fatal(void)
 {
 	set_fatal_routine(test_fatal_routine);
 	fatal("An fatal error occured.");

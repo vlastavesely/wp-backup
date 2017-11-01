@@ -2,7 +2,7 @@
 
 #include "../src/utils.h"
 
-static void test_utils_urlencode_to_buf()
+static void test_utils_urlencode_to_buf(void)
 {
 	char buffer[128];
 
@@ -10,7 +10,7 @@ static void test_utils_urlencode_to_buf()
 	CU_ASSERT_STRING_EQUAL("some+thing+%2f+%25", buffer);
 }
 
-static void test_utils_html_decode_entities_to_buf_named()
+static void test_utils_html_decode_entities_to_buf_named(void)
 {
 	char buffer[128];
 
@@ -21,7 +21,7 @@ static void test_utils_html_decode_entities_to_buf_named()
 	CU_ASSERT_STRING_EQUAL("?", buffer); // ? = unimplemented
 }
 
-static void test_utils_html_decode_entities_to_buf_by_code()
+static void test_utils_html_decode_entities_to_buf_by_code(void)
 {
 	char buffer[128];
 

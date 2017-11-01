@@ -3,7 +3,7 @@
 
 #include "../src/password-resolver.h"
 
-static void test_utils_resolve_from_envvar()
+static void test_utils_resolve_from_envvar(void)
 {
 	char *password;
 

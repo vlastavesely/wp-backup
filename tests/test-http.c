@@ -2,7 +2,7 @@
 
 #include "../src/http.h"
 
-static void test_http_request()
+static void test_http_request(void)
 {
 	struct http_request *request;
 
