@@ -3,6 +3,7 @@
 
 #include "test-options.h"
 #include "test-password-resolver.h"
+#include "test-http.h"
 #include "test-wxr-feed.h"
 #include "test-error-handler.h"
 #include "test-error.h"
@@ -18,6 +19,7 @@ int main(int argc, const char **argv)
 
 	test_options_add_tests(suite);
 	test_password_resolver_add_tests(suite);
+	test_http_add_tests(suite);
 	test_wxr_feed_add_tests(suite);
 	test_error_handler_add_tests(suite);
 	test_error_add_tests(suite);
