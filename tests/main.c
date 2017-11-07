@@ -1,6 +1,7 @@
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
 
+#include "cunit-colorful.h"
 #include "test-options.h"
 #include "test-password-resolver.h"
 #include "test-http.h"
@@ -9,14 +10,8 @@
 #include "test-error.h"
 #include "test-utils.h"
 
-int main(int argc, const char **argv)
+static int cunit_add_tests(struct CU_Suite *suite)
 {
-	struct CU_Suite *suite;
-
-	CU_initialize_registry();
-
-	suite = CU_add_suite("wpbackup_suite", NULL, NULL);
-
 	test_options_add_tests(suite);
 	test_password_resolver_add_tests(suite);
 	test_http_add_tests(suite);
@@ -25,10 +20,32 @@ int main(int argc, const char **argv)
 	test_error_add_tests(suite);
 	test_utils_add_tests(suite);
 
-	CU_basic_set_mode(CU_BRM_VERBOSE);
-	CU_basic_run_tests();
-	CU_basic_show_failures(CU_get_failure_list());
-	CU_cleanup_registry();
-
 	return CU_get_error();
+}
+
+int main(int argc, const char **argv)
+{
+	struct CU_Suite *suite;
+	int code;
+
+	if ((code = CU_initialize_registry()) != CUE_SUCCESS)
+		return code;
+
+	if ((suite = CU_add_suite("suite", NULL, NULL)) == NULL) {
+		code = -1;
+		goto out;
+	}
+
+	if ((code = cunit_add_tests(suite)) != CUE_SUCCESS)
+		goto out;
+
+	/*
+	 * If some test has failed, return code will be
+	 * a non-zero value.
+	 */
+	code = CU_colorful_run_tests();
+
+out:
+	CU_cleanup_registry();
+	return code;
 }
