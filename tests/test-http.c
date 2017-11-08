@@ -18,8 +18,29 @@ static void test_http_request(void)
 	http_request_free(request);
 }
 
+static void test_http_request_send(void)
+{
+	struct http_client *client;
+	struct http_request *request;
+	struct http_response *response;
+
+	client = http_client_new();
+
+	request = http_request_new();
+	request->url = strdup("http://localhost");
+
+	response = http_client_send(client, request);
+	CU_ASSERT_EQUAL(200, response->code);
+
+	http_client_free(client);
+	http_request_free(request);
+	http_response_free(response);
+}
+
 void test_http_add_tests(struct CU_Suite *suite)
 {
 	CU_add_test(suite, "test_http_request",
 		test_http_request);
+	CU_add_test(suite, "test_http_request_send",
+		test_http_request_send);
 }
