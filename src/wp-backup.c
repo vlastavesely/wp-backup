@@ -67,7 +67,6 @@ int main(int argc, const char **argv)
 	if (options.version)
 		print_version();
 
-	
 	/* FIXME That's DIRTY. What about remove all the support for
 	 * skipping invalid SSL?
 	 */
