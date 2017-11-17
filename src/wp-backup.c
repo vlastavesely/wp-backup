@@ -93,5 +93,7 @@ int main(int argc, const char **argv)
 	if (wordpress_logout(wordpress) != 0)
 		fatal("logout failed.\n");
 
+	wordpress_free(wordpress);
+
 	return 0;
 }

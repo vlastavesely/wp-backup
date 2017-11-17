@@ -199,7 +199,7 @@ int wordpress_logout(struct wordpress *connection)
 		fatal("failed to logout - logout URL missing.");
 
 	request = http_request_new();
-	request->url = connection->logout_url;
+	request->url = strdup(connection->logout_url);
 	response = http_client_send(connection->http_client, request);
 
 	/*
