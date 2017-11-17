@@ -5,6 +5,7 @@
 #include "test-options.h"
 #include "test-password-resolver.h"
 #include "test-http.h"
+#include "test-wordpress.h"
 #include "test-wxr-feed.h"
 #include "test-error-handler.h"
 #include "test-error.h"
@@ -15,6 +16,7 @@ static int cunit_add_tests(struct CU_Suite *suite)
 	test_options_add_tests(suite);
 	test_password_resolver_add_tests(suite);
 	test_http_add_tests(suite);
+	test_wordpress_add_tests(suite);
 	test_wxr_feed_add_tests(suite);
 	test_error_handler_add_tests(suite);
 	test_error_add_tests(suite);
