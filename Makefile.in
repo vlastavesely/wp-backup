@@ -47,7 +47,7 @@ tests/test: $(TEST_OBJFILES)
 %.o: %.c Makefile
 	$(CC) $(CFLAGS) $(LIBS) -MMD -MP -c $< -o $@
 
-install:
+install: all
 	cp -f $(PROGNAME) /usr/$(PROGNAME)
 	chmod +x /usr/bin/$(PROGNAME)
 
