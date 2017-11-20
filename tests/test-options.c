@@ -100,7 +100,7 @@ static void test_options_options_parse_missing_unrecognized(void)
 		= {"./progname", "--xxx"};
 
 	getopt_reset();
-	options_parse(&options, 3, argv, &error);
+	options_parse(&options, 2, argv, &error);
 	CU_ASSERT_EQUAL(OPTIONS_ERROR_UNRECOGNIZED_ARGUMENT, error->code);
 	CU_ASSERT_STRING_EQUAL("unrecognized option '--xxx'.", error->message);
 	error_free(error);
