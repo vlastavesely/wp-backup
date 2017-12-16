@@ -20,14 +20,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
+#include <errno.h>
 
+#include "error-handler.h"
 #include "password-resolver.h"
 
-static void print_password_prompt(void)
-{
-	fprintf(stderr, "Enter your WordPress password: ");
-}
-
+/*
+ * If read from standard input, a password ends with a newline. We need
+ * to get rid of it here in order to be able to do successful log in.
+ */
 static void trim_trailing_newlines(char *str)
 {
 	char *last = str + strlen(str) - 1;
@@ -36,36 +37,53 @@ static void trim_trailing_newlines(char *str)
 		*(last--) = '\0';
 }
 
+/*
+ * Returns a newly allocated string containing a password or an error code.
+ * Returned value must be freed.
+ */
 char *password_resolver_resolve_password(void)
 {
 	struct termios oflags, nflags;
 	char buffer[256];
 	char *password;
 
-	password = getenv("WPPASS");
-	if (password)
+	/*
+	 * If environmental variable WPPASS is set, consider its contents
+	 * to be user's password. 
+	 */
+	if (password = getenv("WPPASS"))
 		return strdup(password);
 
 	if (isatty(0)) {
+		/*
+		 * If the program is run from a terminal by user, we need
+		 * to ask him for a password interactively.
+		 */
 		tcgetattr(0, &oflags);
 		nflags = oflags;
 		nflags.c_lflag &= ~ECHO;
 		nflags.c_lflag |= ECHONL;
 
-		if (tcsetattr(0, TCSANOW, &nflags) != 0) {
-			perror("tcsetattr");
-			return NULL;
-		}
+		if (tcsetattr(0, TCSANOW, &nflags) != 0)
+			return ERR_PTR(-errno);
 
-		print_password_prompt();
+		fprintf(stderr, "Enter your WordPress password: ");
 
-		fgets(buffer, sizeof buffer, stdin);
+		if (fgets(buffer, sizeof buffer, stdin) == NULL)
+			return ERR_PTR(-1);
+
 		if (tcsetattr(0, TCSANOW, &oflags) != 0) {
-			perror("tcsetattr");
-			return NULL;
+			memset(buffer, 0, sizeof(buffer));
+			return ERR_PTR(-errno);
 		}
+
 	} else {
-		fgets(buffer, sizeof buffer, stdin);
+		/*
+		 * When program is piped with another one, we can read
+		 * a password from standard input directly without asking.
+		 */
+		if (fgets(buffer, sizeof buffer, stdin) == NULL)
+			return ERR_PTR(-1);
 	}
 
 	trim_trailing_newlines(buffer);

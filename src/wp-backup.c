@@ -79,6 +79,8 @@ int main(int argc, const char **argv)
 	wordpress = wordpress_create(options.wpurl);
 
 	password = password_resolver_resolve_password();
+	if (IS_ERR(password))
+		fatal("failed to resolve a password.");
 
 	ret = wordpress_login(wordpress, options.username, password);
 	memset(password, 0, strlen(password));
