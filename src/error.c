@@ -19,8 +19,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <errno.h>
 
 #include "error.h"
+#include "error-handler.h"
 
 struct error *error_new(int code, const char *err, ...)
 {
@@ -28,20 +30,23 @@ struct error *error_new(int code, const char *err, ...)
 	va_list params;
 	char msg[4096];
 
+	if ((error = malloc(sizeof(*error))) == NULL)
+		return ERR_PTR(-ENOMEM);
+
 	va_start(params, err);
 	vsnprintf(msg, sizeof(msg), err, params);
 	va_end(params);
 
-	error = malloc(sizeof(*error));
 	error->code = code;
 	error->message = strdup(msg);
 	return error;
 }
 
-
 void error_free(struct error *error)
 {
-	free(error->message);
-	free(error);
-	error = NULL;
+	if (error != NULL) {
+		free(error->message);
+		free(error);
+		error = NULL;
+	}
 }
