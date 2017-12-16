@@ -18,13 +18,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <config.h>
 
 static void vreportf(const char *prefix, const char *err, va_list params)
 {
 	char msg[4096];
 
 	vsnprintf(msg, sizeof(msg), err, params);
-	fprintf(stderr, "%s%s\n", prefix, msg);
+	fprintf(stderr, "[%s] %s%s\n", PACKAGE_NAME, prefix, msg);
 }
 
 static void warning_builtin(const char *warn, va_list params)
