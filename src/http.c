@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <curl/curl.h>
+#include <errno.h>
 
 #include "http.h"
 #include "debug.h"
@@ -42,29 +43,34 @@ struct http_client *http_client_new(void)
 {
 	struct http_client *client;
 
-	client = malloc(sizeof(*client));
+	if ((client = malloc(sizeof(*client))) == NULL)
+		return ERR_PTR(-ENOMEM);
+
 	/*
 	 * TODO: Generate random filename
 	 */
 	client->cookiejar = strdup("/tmp/wp-backup-cookies.txt");
-
 	return client;
 }
 
 void http_client_free(struct http_client *client)
 {
-	if (client->cookiejar) {
-		unlink(client->cookiejar);
-		free(client->cookiejar);
+	if (client) {
+		if (client->cookiejar) {
+			unlink(client->cookiejar);
+			free(client->cookiejar);
+		}
+		free(client);
 	}
-	free(client);
 }
 
 struct http_request *http_request_new()
 {
 	struct http_request *request;
 
-	request = malloc(sizeof(*request));
+	if ((request = malloc(sizeof(*request))) == NULL)
+		return ERR_PTR(-ENOMEM);
+
 	request->method = "GET";
 	request->url = NULL;
 	request->body = NULL;
@@ -73,18 +79,22 @@ struct http_request *http_request_new()
 
 void http_request_free(struct http_request *request)
 {
-	if (request->url)
-		free(request->url);
-	if (request->body)
-		free(request->body);
-	free(request);
+	if (request) {
+		if (request->url)
+			free(request->url);
+		if (request->body)
+			free(request->body);
+		free(request);
+	}
 }
 
 static struct http_response *http_response_new()
 {
 	struct http_response *response;
 
-	response = malloc(sizeof(*response));
+	if ((response = malloc(sizeof(*response))) == NULL)
+		return ERR_PTR(-ENOMEM);
+
 	response->code = 0;
 	response->body = NULL;
 	response->length = 0;
@@ -94,11 +104,13 @@ static struct http_response *http_response_new()
 
 void http_response_free(struct http_response *response)
 {
-	if (response->body)
-		free(response->body);
-	if (response->content_type)
-		free(response->content_type);
-	free(response);
+	if (response) {
+		if (response->body)
+			free(response->body);
+		if (response->content_type)
+			free(response->content_type);
+		free(response);
+	}
 }
 
 static void string_buffer_init(struct string_buffer *str)
