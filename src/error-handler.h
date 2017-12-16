@@ -18,6 +18,32 @@
 #ifndef __ERROR_HANDLER_H
 #define __ERROR_HANDLER_H
 
+#include <stdint.h>
+
+#define MAX_ERRNO 4095
+
+#define IS_ERR_VALUE(x) ((uintptr_t)(void *)(x) >= (uintptr_t) - MAX_ERRNO)
+
+static inline void *ERR_PTR(long error)
+{
+	return (void *) error;
+}
+
+static inline long PTR_ERR(const void *ptr)
+{
+	return (long) ptr;
+}
+
+static inline int IS_ERR(const void *ptr)
+{
+	return IS_ERR_VALUE((uintptr_t) ptr);
+}
+
+static inline int IS_ERR_OR_NULL(const void *ptr)
+{
+	return !ptr || IS_ERR_VALUE((uintptr_t) ptr);
+}
+
 void set_warning_routine(void (*routine)(const char *warn, va_list params));
 void set_fatal_routine(void (*routine)(const char *err, va_list params));
 
