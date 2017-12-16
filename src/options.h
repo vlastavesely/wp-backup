@@ -18,8 +18,6 @@
 #ifndef __OPTIONS_H
 #define __OPTIONS_H
 
-#include "error.h"
-
 struct options {
 	const char *username;
 	const char *wpurl;
@@ -33,7 +31,6 @@ struct options {
 #define OPTIONS_ERROR_MISSING_ARGUMENT 2
 #define OPTIONS_ERROR_BAD_ARGUMENT_VALUE 3
 
-int options_parse(struct options *options, int argc, const char **argv,
-		  struct error **error);
+int options_parse(struct options *options, int argc, const char **argv);
 
 #endif /* __OPTIONS_H */

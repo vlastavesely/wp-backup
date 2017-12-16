@@ -47,29 +47,29 @@ static bool wxr_feed_has_signature_comment(xmlNode *node)
 	return false;
 }
 
-struct wxr_feed *wxr_feed_load(const char *filename, struct error **error)
+struct wxr_feed *wxr_feed_load(const char *filename)
 {
 	struct wxr_feed *feed;
 
 	feed = malloc(sizeof(*feed));
 	if ((feed->doc = xmlReadFile(filename, NULL,
 	   XML_PARSE_NOERROR | XML_PARSE_NOWARNING)) == NULL) {
-		*error = error_new(WXR_FEED_ERROR_INVALID_XML,
-				   "File does not contain valid XML data.");
+//		*error = error_new(WXR_FEED_ERROR_INVALID_XML, FIXME
+//				   "File does not contain valid XML data.");
 		return NULL;
 	}
 
 	feed->rss = xmlDocGetRootElement(feed->doc);
 	if (wxr_feed_has_signature_comment(feed->rss) == false) {
-		*error = error_new(WXR_FEED_ERROR_MISSING_SIGNATURE,
-				   "File does not contain signature comment.");
+//		*error = error_new(WXR_FEED_ERROR_MISSING_SIGNATURE, FIXME
+//				   "File does not contain signature comment.");
 		wxr_feed_free(feed);
 		return NULL;
 	}
 
 	if (strcmp("rss", feed->rss->name)) {
-		*error = error_new(WXR_FEED_ERROR_ROOT_IS_NOT_RSS,
-				   "Root element is not 'rss'.");
+//		*error = error_new(WXR_FEED_ERROR_ROOT_IS_NOT_RSS, FIXME
+//				   "Root element is not 'rss'.");
 		wxr_feed_free(feed);
 		return NULL;
 	}

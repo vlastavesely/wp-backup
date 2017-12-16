@@ -26,7 +26,7 @@
 
 struct wxr_feed;
 
-struct wxr_feed *wxr_feed_load(const char *filename, struct error **error);
+struct wxr_feed *wxr_feed_load(const char *filename);
 void wxr_feed_free(struct wxr_feed *feed);
 
 #endif /* __WXR_FEED_H */

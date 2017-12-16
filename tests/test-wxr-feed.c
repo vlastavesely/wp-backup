@@ -26,49 +26,35 @@ static void create_test_wxr_feed_mock(const char *xml)
 static void test_wxr_feed_wxr_feed_load_fail(void)
 {
 	struct wxr_feed *feed;
-	struct error *error;
 
 	/* Invalid XML */
 	create_test_wxr_feed_mock("This ain't a valid XML file.");
-	feed = wxr_feed_load(test_wxr_feed_filename, &error);
+	feed = wxr_feed_load(test_wxr_feed_filename);
 	CU_ASSERT_PTR_NULL(feed);
-	CU_ASSERT_EQUAL(WXR_FEED_ERROR_INVALID_XML,
-			error->code);
-	CU_ASSERT_STRING_EQUAL("File does not contain valid XML data.",
-			       error->message);
-	error_free(error);
+// FIXME	CU_ASSERT_EQUAL(WXR_FEED_ERROR_INVALID_XML, error->code);
 
 	/* Missing header comment */
 	create_test_wxr_feed_mock("<valid><xml/></valid>");
-	feed = wxr_feed_load(test_wxr_feed_filename, &error);
+	feed = wxr_feed_load(test_wxr_feed_filename);
 	CU_ASSERT_PTR_NULL(feed);
-	CU_ASSERT_EQUAL(WXR_FEED_ERROR_MISSING_SIGNATURE,
-			error->code);
-	CU_ASSERT_STRING_EQUAL("File does not contain signature comment.",
-			       error->message);
-	error_free(error);
+// FIXME	CU_ASSERT_EQUAL(WXR_FEED_ERROR_MISSING_SIGNATURE, error->code);
 
 	/* Root is not 'rss' */
 	create_test_wxr_feed_mock("<!-- This is a WordPress eXtended RSS file -->"
 		"<valid><xml/></valid>");
-	feed = wxr_feed_load(test_wxr_feed_filename, &error);
+	feed = wxr_feed_load(test_wxr_feed_filename);
 	CU_ASSERT_PTR_NULL(feed);
-	CU_ASSERT_EQUAL(WXR_FEED_ERROR_ROOT_IS_NOT_RSS,
-			error->code);
-	CU_ASSERT_STRING_EQUAL("Root element is not 'rss'.",
-			       error->message);
-	error_free(error);
+// FIXME	CU_ASSERT_EQUAL(WXR_FEED_ERROR_ROOT_IS_NOT_RSS, error->code);
 }
 
 static void test_wxr_feed_wxr_feed_load_success(void)
 {
 	struct wxr_feed *feed;
-	struct error *error;
 
 	/* Valid */
 	create_test_wxr_feed_mock("<!-- This is a WordPress eXtended RSS file -->"
 		"<rss><xml/></rss>");
-	feed = wxr_feed_load(test_wxr_feed_filename, &error);
+	feed = wxr_feed_load(test_wxr_feed_filename);
 	CU_ASSERT_PTR_NOT_NULL(feed);
 	wxr_feed_free(feed);
 }

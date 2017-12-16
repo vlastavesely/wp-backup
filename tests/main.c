@@ -16,7 +16,6 @@
 #include "test-wordpress.h"
 #include "test-wxr-feed.h"
 #include "test-error-handler.h"
-#include "test-error.h"
 #include "test-utils.h"
 
 static int cunit_add_tests(struct CU_Suite *suite)
@@ -27,7 +26,6 @@ static int cunit_add_tests(struct CU_Suite *suite)
 	test_wordpress_add_tests(suite);
 	test_wxr_feed_add_tests(suite);
 	test_error_handler_add_tests(suite);
-	test_error_add_tests(suite);
 	test_utils_add_tests(suite);
 
 	return CU_get_error();

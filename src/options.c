@@ -36,8 +36,7 @@ static const struct option long_opts[] = {
 	{0, 0, 0, 0}
 };
 
-static void getopt_parse(struct options *options, int argc, const char **argv,
-			 struct error **error)
+static void getopt_parse(struct options *options, int argc, const char **argv)
 {
 	int opt_index = 0;
 	int c = 0;
@@ -70,42 +69,45 @@ static void getopt_parse(struct options *options, int argc, const char **argv,
 			options->help = true;
 			break;
 		case '?':
-			*error = error_new(OPTIONS_ERROR_UNRECOGNIZED_ARGUMENT,
-				"unrecognized option '-%s'.", optopt ?
-				(char *) &(optopt) : argv[optind - 1] + 1);
+		//	FIXME
+		//	*error = error_new(OPTIONS_ERROR_UNRECOGNIZED_ARGUMENT,
+		//		"unrecognized option '-%s'.", optopt ?
+		//		(char *) &(optopt) : argv[optind - 1] + 1);
 		default:
 			break;
 		}
 	}
 }
 
-static void validate_options(struct options *options, struct error **error)
+static void validate_options(struct options *options)
 {
-	if (*error || options->help || options->version)
+	if (options->help || options->version)
 		return;
 
 	if (!options->username) {
-		*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
-			"username cannot be empty.");
+	//	FIXME
+	//	*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
+	//		"username cannot be empty.");
 		return;
 	}
 
 	if (!options->wpurl) {
-		*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
-			"WordPress URL cannot be empty.");
+	//	FIXME
+	//	*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
+	//		"WordPress URL cannot be empty.");
 		return;
 	}
 
 	if (strncmp(options->wpurl, "https://", 8) &&
 	    strncmp(options->wpurl, "http://", 7)) {
-		*error = error_new(OPTIONS_ERROR_BAD_ARGUMENT_VALUE,
-			"WordPress URL does not have 'http://' or 'https://' prefix.");
+	//	FIXME
+	//	*error = error_new(OPTIONS_ERROR_BAD_ARGUMENT_VALUE,
+	//		"WordPress URL does not have 'http://' or 'https://' prefix.");
 		return;
 	}
 }
 
-int options_parse(struct options *options, int argc, const char **argv,
-		  struct error **error)
+int options_parse(struct options *options, int argc, const char **argv)
 {
 	options->username = NULL;
 	options->wpurl = NULL;
@@ -117,8 +119,8 @@ int options_parse(struct options *options, int argc, const char **argv,
 	if (argc == 1) {
 		options->help = 1;
 	} else {
-		getopt_parse(options, argc, argv, error);
-		validate_options(options, error);
+		getopt_parse(options, argc, argv);
+		validate_options(options);
 	}
 
 	return 0;

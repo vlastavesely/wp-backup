@@ -51,15 +51,15 @@ static void print_version(void)
 int main(int argc, const char **argv)
 {
 	struct options options;
-	struct error *error = NULL;
 	struct wordpress *wordpress;
 	char *password;
 	int ret;
 
-	options_parse(&options, argc, argv, &error);
+	options_parse(&options, argc, argv);
 
-	if (error)
-		fatal("%s", error->message);
+//	FIXME
+//	if (error)
+//		fatal("%s", error->message);
 
 	if (options.help)
 		print_usage();
