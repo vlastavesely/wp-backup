@@ -27,10 +27,11 @@ struct options {
 	int ignore_ssl_errors;
 };
 
-#define OPTIONS_ERROR_UNRECOGNIZED_ARGUMENT 1
-#define OPTIONS_ERROR_MISSING_ARGUMENT 2
-#define OPTIONS_ERROR_BAD_ARGUMENT_VALUE 3
+#define EUNRECOG	1
+#define EMISSARG	2
+#define EBADARGVAL	3
 
 int options_parse(struct options *options, int argc, const char **argv);
+char *options_errstr();
 
 #endif /* __OPTIONS_H */

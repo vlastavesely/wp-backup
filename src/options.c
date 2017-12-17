@@ -36,7 +36,9 @@ static const struct option long_opts[] = {
 	{0, 0, 0, 0}
 };
 
-static void getopt_parse(struct options *options, int argc, const char **argv)
+static char errstr[256];
+
+static int getopt_parse(struct options *options, int argc, const char **argv)
 {
 	int opt_index = 0;
 	int c = 0;
@@ -69,46 +71,45 @@ static void getopt_parse(struct options *options, int argc, const char **argv)
 			options->help = true;
 			break;
 		case '?':
-		//	FIXME
-		//	*error = error_new(OPTIONS_ERROR_UNRECOGNIZED_ARGUMENT,
-		//		"unrecognized option '-%s'.", optopt ?
-		//		(char *) &(optopt) : argv[optind - 1] + 1);
+			snprintf(errstr, sizeof(errstr),
+				"unrecognized option '-%s'.", optopt ?
+				(char *) &(optopt) : argv[optind - 1] + 1);
+			return -EUNRECOG;
 		default:
 			break;
 		}
 	}
+
+	return 0;
 }
 
-static void validate_options(struct options *options)
+static int validate_options(struct options *options)
 {
 	if (options->help || options->version)
-		return;
+		return 0;
 
 	if (!options->username) {
-	//	FIXME
-	//	*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
-	//		"username cannot be empty.");
-		return;
+		strcpy(errstr, "username cannot be empty.");
+		return -EMISSARG;
 	}
-
 	if (!options->wpurl) {
-	//	FIXME
-	//	*error = error_new(OPTIONS_ERROR_MISSING_ARGUMENT,
-	//		"WordPress URL cannot be empty.");
-		return;
+		strcpy(errstr, "WordPress URL cannot be empty.");
+		return -EMISSARG;
 	}
-
 	if (strncmp(options->wpurl, "https://", 8) &&
 	    strncmp(options->wpurl, "http://", 7)) {
-	//	FIXME
-	//	*error = error_new(OPTIONS_ERROR_BAD_ARGUMENT_VALUE,
-	//		"WordPress URL does not have 'http://' or 'https://' prefix.");
-		return;
+		strcpy(errstr, "WordPress URL does not have 'http://' "
+			       "or 'https://' prefix.");
+		return -EBADARGVAL;
 	}
+
+	return 0;
 }
 
 int options_parse(struct options *options, int argc, const char **argv)
 {
+	int retval = 0;
+
 	options->username = NULL;
 	options->wpurl = NULL;
 	options->output_file = "wordpress.xml";
@@ -116,12 +117,24 @@ int options_parse(struct options *options, int argc, const char **argv)
 	options->help = false;
 	options->ignore_ssl_errors = false;
 
+	memset(errstr, 0, sizeof(errstr));
+
+	/* No arguments provided */
 	if (argc == 1) {
-		options->help = 1;
-	} else {
-		getopt_parse(options, argc, argv);
-		validate_options(options);
+		options->help = true;
+		goto out;
 	}
 
-	return 0;
+	if ((retval = getopt_parse(options, argc, argv)) != 0)
+		goto out;
+	if ((retval = validate_options(options)) != 0)
+		goto out;
+
+out:
+	return retval;
+}
+
+char *options_errstr()
+{
+	return strdup(errstr);
 }

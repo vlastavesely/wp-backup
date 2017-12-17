@@ -53,13 +53,10 @@ int main(int argc, const char **argv)
 	struct options options;
 	struct wordpress *wordpress;
 	char *password;
-	int ret;
+	int retval;
 
-	options_parse(&options, argc, argv);
-
-//	FIXME
-//	if (error)
-//		fatal("%s", error->message);
+	if ((retval = options_parse(&options, argc, argv)) != 0)
+		fatal(options_errstr());
 
 	if (options.help)
 		print_usage();
@@ -82,11 +79,11 @@ int main(int argc, const char **argv)
 	if (IS_ERR(password))
 		fatal("failed to resolve a password.");
 
-	ret = wordpress_login(wordpress, options.username, password);
+	retval = wordpress_login(wordpress, options.username, password);
 	memset(password, 0, strlen(password));
 	free(password);
 
-	if (ret != 0)
+	if (retval != 0)
 		fatal("login failed.\n");
 
 	if (wordpress_export(wordpress, options.output_file) != 0)
