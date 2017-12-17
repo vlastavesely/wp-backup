@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 #include "wordpress.h"
 #include "http.h"
@@ -44,8 +45,12 @@ struct wordpress {
  */
 static char *wordpress_build_url(const char *wpurl, const char *path)
 {
-	char *url = malloc(strlen(wpurl) + strlen(path) + 2);
+	char *url;
+
 	assert(path[0] == '/');
+
+	if ((url = malloc(strlen(wpurl) + strlen(path) + 2)) == NULL)
+		return ERR_PTR(-ENOMEM);
 
 	strcpy(url, wpurl);
 	/*
@@ -68,14 +73,22 @@ static char *wordpress_build_url(const char *wpurl, const char *path)
 static char *wordpress_build_login_body(const char *username,
 					const char *password)
 {
-	char *body = malloc(32 + (strlen(username) * 3)
-			       + (strlen(password) * 3) + 1);
+	unsigned int len;
+	char *body;
+
+	/* Allocates a buffer for encoded URL. Since any character could be
+	 * expanded into '%XX' form, the buffer must be three tines bigger
+	 * than all strings that will be decoded. */
+	len = 32 + (strlen(username) * 3) + (strlen(password) * 3) + 1;
+	if ((body = malloc(len)) == NULL)
+		return ERR_PTR(-ENOMEM);
 
 	strcpy(body, "log=");
 	urlencode_to_buf(username, body + strlen(body));
 	strcat(body, "&pwd=");
 	urlencode_to_buf(password, body + strlen(body));
 	strcat(body, "&redirect_to=wp-admin");
+
 	return body;
 }
 
@@ -136,11 +149,23 @@ int wordpress_login(struct wordpress *connection, const char *username,
 {
 	struct http_request *request;
 	struct http_response *response;
+	char *url;
 	int retval;
 
+	url = wordpress_build_url(connection->wpurl, "/wp-login.php");
+	if (IS_ERR(url)) {
+		retval = PTR_ERR(url);
+		goto out;
+	}
+
 	request = http_request_new();
+	if (IS_ERR(request)) {
+		retval = PTR_ERR(request);
+		goto out;
+	}
+
 	request->method = "POST";
-	request->url = wordpress_build_url(connection->wpurl, "/wp-login.php");
+	request->url = url;
 	request->body = wordpress_build_login_body(username, password);
 
 	response = http_client_send(connection->http_client, request);
@@ -152,6 +177,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 	http_request_free(request);
 	http_response_free(response);
 
+out:
 	return retval;
 }
 
@@ -164,7 +190,7 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	struct http_response *response;
 	struct wxr_feed *feed;
 	char *url;
-	int ret;
+	int retval;
 
 	url = wordpress_build_url(connection->wpurl, "/wp-admin/export.php?content=all&download=true");
 	response = wordpress_download_to_file(connection, url, filename);
@@ -174,17 +200,20 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	 * If the data are corrupted, download failed.
 	 */
 	feed = wxr_feed_load(filename);
+	if (IS_ERR(feed))
+		retval = PTR_ERR(feed);
+
 //	if (error) { FIXME
 //		fatal(error->message);
 //	}
-	ret = (feed == NULL || response->code != 200);
+	retval = (feed == NULL || response->code != 200);
 
 	if (feed)
 		wxr_feed_free(feed);
 
 	http_response_free(response);
 	free(url);
-	return ret;
+	return retval;
 }
 
 /*
