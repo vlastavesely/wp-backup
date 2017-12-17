@@ -55,13 +55,14 @@ struct http_client *http_client_new(void)
 
 void http_client_free(struct http_client *client)
 {
-	if (client) {
-		if (client->cookiejar) {
-			unlink(client->cookiejar);
-			free(client->cookiejar);
-		}
-		free(client);
+	if (client == NULL)
+		return;
+
+	if (client->cookiejar) {
+		unlink(client->cookiejar);
+		free(client->cookiejar);
 	}
+	free(client);
 }
 
 struct http_request *http_request_new()
@@ -79,13 +80,14 @@ struct http_request *http_request_new()
 
 void http_request_free(struct http_request *request)
 {
-	if (request) {
-		if (request->url)
-			free(request->url);
-		if (request->body)
-			free(request->body);
-		free(request);
-	}
+	if (request == NULL)
+		return;
+
+	if (request->url)
+		free(request->url);
+	if (request->body)
+		free(request->body);
+	free(request);
 }
 
 static struct http_response *http_response_new()
@@ -104,13 +106,14 @@ static struct http_response *http_response_new()
 
 void http_response_free(struct http_response *response)
 {
-	if (response) {
-		if (response->body)
-			free(response->body);
-		if (response->content_type)
-			free(response->content_type);
-		free(response);
-	}
+	if (response == NULL)
+		return;
+
+	if (response->body)
+		free(response->body);
+	if (response->content_type)
+		free(response->content_type);
+	free(response);
 }
 
 static void string_buffer_init(struct string_buffer *str)

@@ -118,6 +118,9 @@ struct wordpress *wordpress_create(const char *wpurl)
 
 void wordpress_free(struct wordpress *connection)
 {
+	if (connection == NULL)
+		return;
+
 	http_client_free(connection->http_client);
 	if (connection->logout_url)
 		free(connection->logout_url);
