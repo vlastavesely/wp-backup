@@ -20,9 +20,9 @@
 
 #include "error.h"
 
-#define WXR_FEED_ERROR_INVALID_XML 1
-#define WXR_FEED_ERROR_MISSING_SIGNATURE 2
-#define WXR_FEED_ERROR_ROOT_IS_NOT_RSS 3
+#define EINVALXML	1
+#define EMISSSIG	2
+#define EINVALROOT	3
 
 struct wxr_feed;
 

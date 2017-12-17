@@ -18,10 +18,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 
 #include "wxr-feed.h"
+#include "error-handler.h"
 
 struct wxr_feed {
 	xmlDoc *doc;
@@ -51,27 +53,22 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 {
 	struct wxr_feed *feed;
 
-	feed = malloc(sizeof(*feed));
+	if ((feed = malloc(sizeof(*feed))) == NULL)
+		return ERR_PTR(-ENOMEM);
+
 	if ((feed->doc = xmlReadFile(filename, NULL,
-	   XML_PARSE_NOERROR | XML_PARSE_NOWARNING)) == NULL) {
-//		*error = error_new(WXR_FEED_ERROR_INVALID_XML, FIXME
-//				   "File does not contain valid XML data.");
-		return NULL;
-	}
+	   XML_PARSE_NOERROR | XML_PARSE_NOWARNING)) == NULL)
+		return ERR_PTR(-EINVALXML);
 
 	feed->rss = xmlDocGetRootElement(feed->doc);
-	if (wxr_feed_has_signature_comment(feed->rss) == false) {
-//		*error = error_new(WXR_FEED_ERROR_MISSING_SIGNATURE, FIXME
-//				   "File does not contain signature comment.");
+	if (strcmp("rss", feed->rss->name)) {
 		wxr_feed_free(feed);
-		return NULL;
+		return ERR_PTR(-EINVALROOT);
 	}
 
-	if (strcmp("rss", feed->rss->name)) {
-//		*error = error_new(WXR_FEED_ERROR_ROOT_IS_NOT_RSS, FIXME
-//				   "Root element is not 'rss'.");
+	if (wxr_feed_has_signature_comment(feed->rss) == false) {
 		wxr_feed_free(feed);
-		return NULL;
+		return ERR_PTR(-EMISSSIG);
 	}
 
 	return feed;
@@ -79,6 +76,9 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 
 void wxr_feed_free(struct wxr_feed *feed)
 {
+	if (feed == NULL)
+		return;
+
 	xmlFreeDoc(feed->doc);
 	xmlCleanupParser();
 	free(feed);
