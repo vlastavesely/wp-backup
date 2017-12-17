@@ -22,7 +22,7 @@
 #include <termios.h>
 #include <errno.h>
 
-#include "error-handler.h"
+#include "err.h"
 #include "password-resolver.h"
 
 /*

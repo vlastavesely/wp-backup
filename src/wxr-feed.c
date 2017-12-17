@@ -23,7 +23,7 @@
 #include <libxml/parser.h>
 
 #include "wxr-feed.h"
-#include "error-handler.h"
+#include "err.h"
 
 struct wxr_feed {
 	xmlDoc *doc;

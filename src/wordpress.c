@@ -23,8 +23,7 @@
 #include "http.h"
 #include "wxr-feed.h"
 #include "utils.h"
-#include "error.h"
-#include "error-handler.h"
+#include "err.h"
 
 /*
  * This structure represents a connection to a remote WordPress

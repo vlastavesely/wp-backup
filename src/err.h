@@ -15,8 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ERROR_HANDLER_H
-#define __ERROR_HANDLER_H
+#ifndef __ERR_H
+#define __ERR_H
 
 #include <stdint.h>
 
@@ -50,4 +50,4 @@ void set_fatal_routine(void (*routine)(const char *err, va_list params));
 void warning(const char *err, ...);
 void fatal(const char *err, ...);
 
-#endif /* __ERROR_HANDLER_H */
+#endif /* __ERR_H */

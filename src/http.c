@@ -24,7 +24,7 @@
 
 #include "http.h"
 #include "debug.h"
-#include "error-handler.h"
+#include "err.h"
 
 /*
  * Structure for session data storage. It holds data we need between

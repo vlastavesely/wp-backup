@@ -6,9 +6,9 @@
  * published by the Free Software Foundation.
  */
 
-#ifndef __TEST_ERROR_HANDLER_H
-#define __TEST_ERROR_HANDLER_H
+#ifndef __TEST_ERR_H
+#define __TEST_ERR_H
 
-void test_error_handler_add_tests(struct CU_Suite *suite);
+void test_err_add_tests(struct CU_Suite *suite);
 
-#endif /* __TEST_ERROR_HANDLER_H */
+#endif /* __TEST_ERR_H */

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <CUnit/CUnit.h>
 
-#include "../src/error-handler.h"
+#include "../src/err.h"
 #include "../src/wxr-feed.h"
 
 static const char *test_wxr_feed_filename = "/tmp/wxr.xml";
