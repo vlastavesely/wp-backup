@@ -15,11 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <errno.h>
-
+#include "compat.h"
 #include "wordpress.h"
 #include "http.h"
 #include "wxr-feed.h"
@@ -204,7 +200,7 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 		retval = PTR_ERR(feed);
 
 //	if (error) { FIXME
-//		fatal(error->message);
+//		die(error->message);
 //	}
 	retval = (feed == NULL || response->code != 200);
 
@@ -226,7 +222,7 @@ int wordpress_logout(struct wordpress *connection)
 	const char *ptr = NULL;
 
 	if (connection->logout_url == NULL)
-		fatal("failed to logout - logout URL missing.");
+		die("failed to logout - logout URL missing.");
 
 	request = http_request_new();
 	request->url = strdup(connection->logout_url);

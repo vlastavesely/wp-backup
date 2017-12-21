@@ -18,8 +18,6 @@
 #ifndef __WXR_FEED_H
 #define __WXR_FEED_H
 
-#include "error.h"
-
 #define EINVALXML	1
 #define EMISSSIG	2
 #define EINVALROOT	3

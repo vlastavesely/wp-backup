@@ -15,11 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "wp-backup.h"
+#include "compat.h"
+#include "options.h"
+#include "wordpress.h"
+#include "password-resolver.h"
+#include "err.h"
 
 static const char usage_string[] =
 	PACKAGE_NAME " [options]\n"
@@ -38,14 +38,12 @@ static const char usage_string[] =
 
 static void print_usage(void)
 {
-	printf("%s\n", usage_string);
-	exit(129);
+	die("%s\n", usage_string);
 }
 
 static void print_version(void)
 {
-	printf("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
-	exit(129);
+	die("%s v%s\n", PACKAGE_NAME, PACKAGE_VERSION);
 }
 
 int main(int argc, const char **argv)
@@ -55,8 +53,12 @@ int main(int argc, const char **argv)
 	char *password;
 	int retval;
 
-	if ((retval = options_parse(&options, argc, argv)) != 0)
-		fatal(options_errstr());
+	/* May fail when invalid or no arguments provided. */
+	retval = options_parse(&options, argc, argv);
+	if (retval != 0) {
+		error(options_errstr());
+		goto out;
+	}
 
 	if (options.help)
 		print_usage();
@@ -77,22 +79,23 @@ int main(int argc, const char **argv)
 
 	password = password_resolver_resolve_password();
 	if (IS_ERR(password))
-		fatal("failed to resolve a password.");
+		die("failed to resolve a password.");
 
 	retval = wordpress_login(wordpress, options.username, password);
 	memset(password, 0, strlen(password));
 	free(password);
 
 	if (retval != 0)
-		fatal("login failed.\n");
+		die("login failed.\n");
 
 	if (wordpress_export(wordpress, options.output_file) != 0)
-		fatal("export failed.\n");
+		die("export failed.\n");
 
 	if (wordpress_logout(wordpress) != 0)
-		fatal("logout failed.\n");
+		die("logout failed.\n");
 
 	wordpress_free(wordpress);
 
-	return 0;
+out:
+	return retval;
 }

@@ -15,15 +15,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <libxml/xmlmemory.h>
-#include <libxml/parser.h>
-
+#include "compat.h"
 #include "wxr-feed.h"
 #include "err.h"
+
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
 
 struct wxr_feed {
 	xmlDoc *doc;

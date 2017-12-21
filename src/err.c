@@ -15,10 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <config.h>
+#include "compat.h"
 
 static void vreportf(const char *prefix, const char *err, va_list params)
 {
@@ -38,15 +35,15 @@ static void error_builtin(const char *err, va_list params)
 	vreportf("error: ", err, params);
 }
 
-static void fatal_builtin(const char *err, va_list params)
+static void die_builtin(const char *err, va_list params)
 {
-	vreportf("fatal: ", err, params);
+	fprintf(stderr, err, params);
 	exit(128);
 }
 
 static void (*warning_routine)(const char *warn, va_list params) = warning_builtin;
 static void (*error_routine)(const char *err, va_list params) = error_builtin;
-static void (*fatal_routine)(const char *err, va_list params) = fatal_builtin;
+static void (*die_routine)(const char *err, va_list params) = die_builtin;
 
 void set_warning_routine(void (*routine)(const char *warn, va_list params))
 {
@@ -58,9 +55,9 @@ void set_error_routine(void (*routine)(const char *err, va_list params))
 	error_routine = routine;
 }
 
-void set_fatal_routine(void (*routine)(const char *err, va_list params))
+void set_die_routine(void (*routine)(const char *err, va_list params))
 {
-	fatal_routine = routine;
+	die_routine = routine;
 }
 
 void warning(const char *err, ...)
@@ -82,11 +79,11 @@ void error(const char *err, ...)
 	va_end(params);
 }
 
-void fatal(const char *err, ...)
+void die(const char *err, ...)
 {
 	va_list params;
 
 	va_start(params, err);
-	fatal_routine(err, params);
+	die_routine(err, params);
 	va_end(params);
 }

@@ -18,8 +18,6 @@
 #ifndef __HTTP_H
 #define __HTTP_H
 
-#include <stdlib.h>
-
 struct http_request {
 	const char *method;
 	char *url;

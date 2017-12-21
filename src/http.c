@@ -15,15 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <assert.h>
-#include <curl/curl.h>
-#include <errno.h>
-
+#include "compat.h"
 #include "http.h"
 #include "err.h"
+
+#include <curl/curl.h>
 
 /*
  * Structure for session data storage. It holds data we need between
@@ -128,7 +124,7 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 
 	str->data = realloc(str->data, length + 1);
 	if (!str->data)
-		fatal("failed to realloc() string buffer.");
+		die("failed to realloc() string buffer.");
 
 	memcpy(str->data + str->nbytes, ptr, size * nmemb);
 	str->data[length] = '\0';
@@ -146,7 +142,7 @@ static CURL *http_curl_new(struct http_client *client,
 	CURL *curl;
 
 	if ((curl = curl_easy_init()) == NULL)
-		fatal("failed to initialize cURL context.");
+		die("failed to initialize cURL context.");
 
 	curl_easy_setopt(curl, CURLOPT_URL, request->url);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -174,13 +170,13 @@ static struct http_response *http_curl_perform(CURL *curl)
 	const char *content_type = NULL;
 
 	if (curl_easy_perform(curl) != CURLE_OK)
-		fatal("failed to get response from the server.");
+		die("failed to get response from the server.");
 
 	if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code) != 0)
-		fatal("failed to fetch HTTP status code from response.");
+		die("failed to fetch HTTP status code from response.");
 
 	if (curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &content_type) != 0)
-		fatal("failed to fetch content-type from response.");
+		die("failed to fetch content-type from response.");
 
 	response = http_response_new();
 	response->code = http_code;
@@ -228,7 +224,7 @@ struct http_response *http_client_download_file(struct http_client *client,
 	FILE *fp;
 
 	if ((fp = fopen(filename, "w")) == NULL)
-		fatal("failed to open file '%s' for writing.", filename);
+		die("failed to open file '%s' for writing.", filename);
 
 	curl = http_curl_new(client, request);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);

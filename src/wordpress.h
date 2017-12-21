@@ -18,8 +18,6 @@
 #ifndef __WORDPRESS_H
 #define __WORDPRESS_H
 
-#include <stdio.h>
-
 struct wordpress;
 
 struct wordpress *wordpress_create(const char *wpurl);

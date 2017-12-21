@@ -15,13 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <termios.h>
-#include <errno.h>
-
+#include "compat.h"
 #include "err.h"
 #include "password-resolver.h"
 
