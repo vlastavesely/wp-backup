@@ -23,7 +23,6 @@
 #include <errno.h>
 
 #include "http.h"
-#include "debug.h"
 #include "err.h"
 
 /*
@@ -204,9 +203,7 @@ struct http_response *http_client_send(struct http_client *client,
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, str_buffer_append);
 
-	DEBUG("Sending a request to '%s'...\n", request->url);
 	response = http_curl_perform(curl);
-	DEBUG("Request sent, status code is %d.\n", response->code);
 
 	/*
 	 * Response takes over the string, it won't be freed here
@@ -236,9 +233,7 @@ struct http_response *http_client_download_file(struct http_client *client,
 	curl = http_curl_new(client, request);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 
-	DEBUG("Downloading file from '%s'...\n", request->url);
 	response = http_curl_perform(curl);
-	DEBUG("File download completed, status code is %d.\n", response->code);
 
 	fclose(fp);
 	curl_easy_cleanup(curl);
