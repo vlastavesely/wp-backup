@@ -40,6 +40,7 @@ char *password_resolver_resolve_password(void)
 	struct termios oflags, nflags;
 	char buffer[256];
 	char *password;
+	int err;
 
 	/*
 	 * If environmental variable WPPASS is set, consider its contents
@@ -67,8 +68,9 @@ char *password_resolver_resolve_password(void)
 			return ERR_PTR(-1);
 
 		if (tcsetattr(0, TCSANOW, &oflags) != 0) {
+			err = errno;
 			memset(buffer, 0, sizeof(buffer));
-			return ERR_PTR(-errno);
+			return ERR_PTR(-err);
 		}
 
 	} else {
