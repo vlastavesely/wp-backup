@@ -45,9 +45,11 @@ static inline int IS_ERR_OR_NULL(const void *ptr)
 }
 
 void set_warning_routine(void (*routine)(const char *warn, va_list params));
+void set_error_routine(void (*routine)(const char *err, va_list params));
 void set_fatal_routine(void (*routine)(const char *err, va_list params));
 
 void warning(const char *err, ...);
+void error(const char *err, ...);
 void fatal(const char *err, ...);
 
 #endif /* __ERR_H */

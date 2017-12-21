@@ -33,6 +33,11 @@ static void warning_builtin(const char *warn, va_list params)
 	vreportf("warning: ", warn, params);
 }
 
+static void error_builtin(const char *err, va_list params)
+{
+	vreportf("error: ", err, params);
+}
+
 static void fatal_builtin(const char *err, va_list params)
 {
 	vreportf("fatal: ", err, params);
@@ -40,11 +45,17 @@ static void fatal_builtin(const char *err, va_list params)
 }
 
 static void (*warning_routine)(const char *warn, va_list params) = warning_builtin;
+static void (*error_routine)(const char *err, va_list params) = error_builtin;
 static void (*fatal_routine)(const char *err, va_list params) = fatal_builtin;
 
 void set_warning_routine(void (*routine)(const char *warn, va_list params))
 {
 	warning_routine = routine;
+}
+
+void set_error_routine(void (*routine)(const char *err, va_list params))
+{
+	error_routine = routine;
 }
 
 void set_fatal_routine(void (*routine)(const char *err, va_list params))
@@ -58,6 +69,16 @@ void warning(const char *err, ...)
 
 	va_start(params, err);
 	warning_routine(err, params);
+	va_end(params);
+}
+
+#undef error
+void error(const char *err, ...)
+{
+	va_list params;
+
+	va_start(params, err);
+	error_routine(err, params);
 	va_end(params);
 }
 
