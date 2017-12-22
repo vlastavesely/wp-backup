@@ -17,7 +17,7 @@ static void test_warning_routine(const char *warn, va_list params)
 	vsnprintf(buffer, sizeof(buffer), warn, params);
 }
 
-static void test_fatal_routine(const char *err, va_list params)
+static void test_die_routine(const char *err, va_list params)
 {
 	vsnprintf(buffer, sizeof(buffer), err, params);
 }
@@ -29,15 +29,15 @@ static void test_err_warning(void)
 	CU_ASSERT_STRING_EQUAL("Some warning.", buffer);
 }
 
-static void test_err_fatal(void)
+static void test_err_die(void)
 {
-	set_fatal_routine(test_fatal_routine);
-	fatal("An fatal error occured.");
-	CU_ASSERT_STRING_EQUAL("An fatal error occured.", buffer);
+	set_die_routine(test_die_routine);
+	die("An die error occured.");
+	CU_ASSERT_STRING_EQUAL("An die error occured.", buffer);
 }
 
 void test_err_add_tests(struct CU_Suite *suite)
 {
 	CU_add_test(suite, "test_err_warning", test_err_warning);
-	CU_add_test(suite, "test_err_fatal", test_err_fatal);
+	CU_add_test(suite, "test_err_die", test_err_die);
 }

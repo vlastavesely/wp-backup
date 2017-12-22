@@ -18,7 +18,7 @@ static void create_test_wxr_feed_mock(const char *xml)
 {
 	FILE *fp;
 	if ((fp = fopen(test_wxr_feed_filename, "w")) == NULL)
-		fatal("Failed to create a temp WXR feed.");
+		die("Failed to create a temp WXR feed.");
 	fprintf(fp, "%s", xml);
 	fclose(fp);
 }
