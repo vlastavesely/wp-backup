@@ -16,14 +16,14 @@
  */
 
 #include "compat.h"
+#include "err.h"
 
-static char byte_to_hex(char code)
+static inline char nibble_to_hex(char code)
 {
 	static char hex[] = "0123456789abcdef";
 	return hex[code & 15];
 }
 
-/* Inspired by: http://www.geekhideout.com/urlcode.shtml */
 void urlencode_to_buf(const char *str, char *buf)
 {
 	while (*str) {
@@ -34,8 +34,8 @@ void urlencode_to_buf(const char *str, char *buf)
 			*buf++ = '+';
 		} else {
 			*buf++ = '%';
-			*buf++ = byte_to_hex(*str >> 4);
-			*buf++ = byte_to_hex(*str & 15);
+			*buf++ = nibble_to_hex(*str >> 4);
+			*buf++ = nibble_to_hex(*str & 15);
 		}
 		str++;
 	}
@@ -44,7 +44,7 @@ void urlencode_to_buf(const char *str, char *buf)
 
 static void pack_unicode_char(char **dest, unsigned long c)
 {
-	assert(c <= 0x10ffff);
+	assert(c <= 0x10ffff); /* maximal value of a valid unicode char */
 
 	if (c <= 0x00007f) {
 		*(*dest)   = c;
@@ -71,15 +71,19 @@ static void decode_named_entity(char **dest, const char *src)
 		*(*dest) = '<';
 	else if (!strncmp(src, "gt;", 3))
 		*(*dest) = '>';
-	else
-		/* TODO add all other common entities */
+	else {
+		/* Other entities *should* not be needed in context
+		 * we need. But you can never know when authors of
+		 * WordPress decide to change something... */
+		warning("unknown HTML entity.");
 		*(*dest) = '?';
+	}
 }
 
 void html_decode_entities_to_buf(const char *str, char *buf)
 {
 	unsigned long code;
-	int is_hex;
+	bool is_hex;
 	char *ptr = buf, *end;
 
 	while (*str) {
@@ -89,11 +93,11 @@ void html_decode_entities_to_buf(const char *str, char *buf)
 				code = strtoul(str + (is_hex ? 3 : 2),
 					       &end, is_hex ? 16 : 10);
 				pack_unicode_char(&ptr, code);
+				str = end;
 			} else {
 				decode_named_entity(&ptr, ++str);
-				end = strchr(str, ';');
+				str = strchr(str, ';');
 			}
-			str = end;
 		} else {
 			*ptr = *str;
 		}
