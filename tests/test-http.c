@@ -14,7 +14,7 @@ static void test_http_request(void)
 {
 	struct http_request *request;
 
-	request = http_request_new();
+	request = alloc_http_request();
 	CU_ASSERT_STRING_EQUAL("GET", request->method);
 	CU_ASSERT_PTR_NULL(request->url);
 	CU_ASSERT_PTR_NULL(request->body);
@@ -23,7 +23,7 @@ static void test_http_request(void)
 	request->method = "POST"; /* const char */
 	request->body = strdup("user=admin&pwd=secret");
 
-	http_request_free(request);
+	drop_http_request(request);
 }
 
 static void test_http_request_send(void)
@@ -32,17 +32,17 @@ static void test_http_request_send(void)
 	struct http_request *request;
 	struct http_response *response;
 
-	client = http_client_new();
+	client = alloc_http_client();
 
-	request = http_request_new();
+	request = alloc_http_request();
 	request->url = strdup("http://localhost");
 
 	response = http_client_send(client, request);
 	CU_ASSERT_EQUAL(200, response->code);
 
-	http_client_free(client);
-	http_request_free(request);
-	http_response_free(response);
+	drop_http_client(client);
+	drop_http_request(request);
+	drop_http_response(response);
 }
 
 void test_http_add_tests(struct CU_Suite *suite)

@@ -115,7 +115,7 @@ struct wordpress *wordpress_create(const char *wpurl)
 	struct wordpress *connection;
 
 	connection = malloc(sizeof(*connection));
-	connection->http_client = http_client_new();
+	connection->http_client = alloc_http_client();
 	connection->wpurl = wpurl;
 	connection->logout_url = NULL;
 	/* if (options->ignore_ssl_errors)
@@ -124,12 +124,12 @@ struct wordpress *wordpress_create(const char *wpurl)
 	return connection;
 }
 
-void wordpress_free(struct wordpress *connection)
+void drop_wordpress(struct wordpress *connection)
 {
 	if (connection == NULL)
 		return;
 
-	http_client_free(connection->http_client);
+	drop_http_client(connection->http_client);
 	if (connection->logout_url)
 		free(connection->logout_url);
 	free(connection);
@@ -154,7 +154,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 		goto out;
 	}
 
-	request = http_request_new();
+	request = alloc_http_request();
 	if (IS_ERR(request)) {
 		retval = PTR_ERR(request);
 		goto out;
@@ -170,8 +170,8 @@ int wordpress_login(struct wordpress *connection, const char *username,
 
 	/* Zeroize password in the body of the request */
 	memset(request->body, 0, strlen(request->body));
-	http_request_free(request);
-	http_response_free(response);
+	drop_http_request(request);
+	drop_http_response(response);
 
 out:
 	return retval;
@@ -205,9 +205,9 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 	retval = (feed == NULL || response->code != 200);
 
 	if (feed)
-		wxr_feed_free(feed);
+		drop_wxr_feed(feed);
 
-	http_response_free(response);
+	drop_http_response(response);
 	free(url);
 	return retval;
 }
@@ -224,7 +224,7 @@ int wordpress_logout(struct wordpress *connection)
 	if (connection->logout_url == NULL)
 		die("failed to logout - logout URL missing.");
 
-	request = http_request_new();
+	request = alloc_http_request();
 	request->url = strdup(connection->logout_url);
 	response = http_client_send(connection->http_client, request);
 
@@ -234,8 +234,8 @@ int wordpress_logout(struct wordpress *connection)
 	 */
 	ptr = strstr((const char *) response->body, "loginform");
 
-	http_request_free(request);
-	http_response_free(response);
+	drop_http_request(request);
+	drop_http_response(response);
 
 	return ptr == NULL;
 }
@@ -249,10 +249,10 @@ struct http_response *wordpress_download_to_file(struct wordpress *connection,
 	struct http_request *request;
 	struct http_response *response;
 
-	request = http_request_new();
+	request = alloc_http_request();
 	request->url = strdup(url);
 	response = http_client_download_file(connection->http_client, request, filename);
-	http_request_free(request);
+	drop_http_request(request);
 
 	return response;
 }

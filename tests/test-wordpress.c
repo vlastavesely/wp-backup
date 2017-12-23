@@ -43,7 +43,7 @@ static void test_wordpress_login_logout(void)
 	CU_ASSERT_PTR_NOT_NULL(fp);
 	fclose(fp);
 
-	wordpress_free(wordpress);
+	drop_wordpress(wordpress);
 }
 
 void test_wordpress_add_tests(struct CU_Suite *suite)

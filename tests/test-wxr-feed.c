@@ -56,7 +56,7 @@ static void test_wxr_feed_wxr_feed_load_success(void)
 		"<rss><xml/></rss>");
 	feed = wxr_feed_load(test_wxr_feed_filename);
 	CU_ASSERT_FALSE(IS_ERR(feed));
-	wxr_feed_free(feed);
+	drop_wxr_feed(feed);
 }
 
 void test_wxr_feed_add_tests(struct CU_Suite *suite)

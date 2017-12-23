@@ -31,13 +31,13 @@ struct http_response {
 	char *content_type;
 };
 
-struct http_client *http_client_new(void);
-void http_client_free(struct http_client *client);
+struct http_client *alloc_http_client(void);
+void drop_http_client(struct http_client *client);
 
-struct http_request *http_request_new();
-void http_request_free(struct http_request *request);
+struct http_request *alloc_http_request();
+void drop_http_request(struct http_request *request);
 
-void http_response_free(struct http_response *response);
+void drop_http_response(struct http_response *response);
 
 struct http_response *http_client_send(struct http_client *client,
 		struct http_request *request);

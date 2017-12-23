@@ -94,7 +94,7 @@ int main(int argc, const char **argv)
 	if (wordpress_logout(wordpress) != 0)
 		die("logout failed.\n");
 
-	wordpress_free(wordpress);
+	drop_wordpress(wordpress);
 
 out:
 	return retval;

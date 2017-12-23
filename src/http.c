@@ -34,11 +34,12 @@ struct string_buffer {
 	size_t nbytes;
 };
 
-struct http_client *http_client_new(void)
+struct http_client *alloc_http_client(void)
 {
 	struct http_client *client;
 
-	if ((client = malloc(sizeof(*client))) == NULL)
+	client = malloc(sizeof(*client));
+	if (!client)
 		return ERR_PTR(-ENOMEM);
 
 	/*
@@ -48,7 +49,7 @@ struct http_client *http_client_new(void)
 	return client;
 }
 
-void http_client_free(struct http_client *client)
+void drop_http_client(struct http_client *client)
 {
 	if (client == NULL)
 		return;
@@ -60,11 +61,12 @@ void http_client_free(struct http_client *client)
 	free(client);
 }
 
-struct http_request *http_request_new()
+struct http_request *alloc_http_request()
 {
 	struct http_request *request;
 
-	if ((request = malloc(sizeof(*request))) == NULL)
+	request = malloc(sizeof(*request));
+	if (!request)
 		return ERR_PTR(-ENOMEM);
 
 	request->method = "GET";
@@ -73,7 +75,7 @@ struct http_request *http_request_new()
 	return request;
 }
 
-void http_request_free(struct http_request *request)
+void drop_http_request(struct http_request *request)
 {
 	if (request == NULL)
 		return;
@@ -85,11 +87,12 @@ void http_request_free(struct http_request *request)
 	free(request);
 }
 
-static struct http_response *http_response_new()
+static struct http_response *alloc_http_response()
 {
 	struct http_response *response;
 
-	if ((response = malloc(sizeof(*response))) == NULL)
+	response = malloc(sizeof(*response));
+	if (!response)
 		return ERR_PTR(-ENOMEM);
 
 	response->code = 0;
@@ -99,7 +102,7 @@ static struct http_response *http_response_new()
 	return response;
 }
 
-void http_response_free(struct http_response *response)
+void drop_http_response(struct http_response *response)
 {
 	if (response == NULL)
 		return;
@@ -136,7 +139,7 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 /*
  * Initializes default cURL context from request data.
  */
-static CURL *http_curl_new(struct http_client *client,
+static CURL *alloc_http_curl(struct http_client *client,
 		struct http_request *request)
 {
 	CURL *curl;
@@ -178,7 +181,7 @@ static struct http_response *http_curl_perform(CURL *curl)
 	if (curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &content_type) != 0)
 		die("failed to fetch content-type from response.");
 
-	response = http_response_new();
+	response = alloc_http_response();
 	response->code = http_code;
 	response->content_type = strdup(content_type);
 	return response;
@@ -195,7 +198,7 @@ struct http_response *http_client_send(struct http_client *client,
 	CURL *curl;
 
 	string_buffer_init(&str);
-	curl = http_curl_new(client, request);
+	curl = alloc_http_curl(client, request);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, str_buffer_append);
 
@@ -223,10 +226,11 @@ struct http_response *http_client_download_file(struct http_client *client,
 	CURL *curl;
 	FILE *fp;
 
-	if ((fp = fopen(filename, "w")) == NULL)
+	fp = fopen(filename, "w");
+	if (!fp)
 		die("failed to open file '%s' for writing.", filename);
 
-	curl = http_curl_new(client, request);
+	curl = alloc_http_curl(client, request);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 
 	response = http_curl_perform(curl);
