@@ -115,6 +115,9 @@ struct wordpress *wordpress_create(const char *wpurl)
 	struct wordpress *connection;
 
 	connection = malloc(sizeof(*connection));
+	if (!connection)
+		return ERR_PTR(-ENOMEM);
+
 	connection->http_client = alloc_http_client();
 	connection->wpurl = wpurl;
 	connection->logout_url = NULL;
