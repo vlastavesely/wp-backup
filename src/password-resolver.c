@@ -46,14 +46,14 @@ char *password_resolver_resolve_password(void)
 	 * If environmental variable WPPASS is set, consider its contents
 	 * to be user's password. 
 	 */
-	if (password = getenv("WPPASS"))
-		return strdup(password);
+	if (password = getenv("WPPASS")) {
+		password = strdup(password);
+		unsetenv("WPPASS");
+		return password;
+	}
 
 	if (isatty(0)) {
-		/*
-		 * If the program is run from a terminal by user, we need
-		 * to ask him for a password interactively.
-		 */
+		/* In terminal, ask user for password interactively. */
 		tcgetattr(0, &oflags);
 		nflags = oflags;
 		nflags.c_lflag &= ~ECHO;
@@ -74,10 +74,7 @@ char *password_resolver_resolve_password(void)
 		}
 
 	} else {
-		/*
-		 * When program is piped with another one, we can read
-		 * a password from standard input directly without asking.
-		 */
+		/* Read from piped input. */
 		if (fgets(buffer, sizeof buffer, stdin) == NULL)
 			return ERR_PTR(-1);
 	}
