@@ -51,7 +51,7 @@ struct http_client *alloc_http_client(void)
 
 void drop_http_client(struct http_client *client)
 {
-	if (client == NULL)
+	if (IS_ERR_OR_NULL(client))
 		return;
 
 	if (client->cookiejar) {
@@ -77,7 +77,7 @@ struct http_request *alloc_http_request()
 
 void drop_http_request(struct http_request *request)
 {
-	if (request == NULL)
+	if (IS_ERR_OR_NULL(request))
 		return;
 
 	if (request->url)
@@ -104,7 +104,7 @@ static struct http_response *alloc_http_response()
 
 void drop_http_response(struct http_response *response)
 {
-	if (response == NULL)
+	if (IS_ERR_OR_NULL(response))
 		return;
 
 	if (response->body)

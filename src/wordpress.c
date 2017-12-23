@@ -126,7 +126,7 @@ struct wordpress *wordpress_create(const char *wpurl)
 
 void drop_wordpress(struct wordpress *connection)
 {
-	if (connection == NULL)
+	if (IS_ERR_OR_NULL(connection))
 		return;
 
 	drop_http_client(connection->http_client);

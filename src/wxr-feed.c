@@ -107,7 +107,7 @@ drop_feed:
 
 void drop_wxr_feed(struct wxr_feed *feed)
 {
-	if (feed == NULL)
+	if (IS_ERR_OR_NULL(feed))
 		return;
 
 	if (feed->doc)
