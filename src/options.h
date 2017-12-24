@@ -22,6 +22,7 @@ struct options {
 	const char *username;
 	const char *wpurl;
 	const char *output_file;
+	int quiet;
 	int version;
 	int help;
 	int ignore_ssl_errors;

@@ -19,11 +19,12 @@
 #include "options.h"
 #include "err.h"
 
-static const char *short_opts = "hvu:w:o:";
+static const char *short_opts = "hvqu:w:o:";
 
 static const struct option long_opts[] = {
 	{"help",        no_argument,       0, 'h'},
 	{"version",     no_argument,       0, 'v'},
+	{"quiet",       no_argument,       0, 'q'},
 	{"username",    required_argument, 0, 'u'},
 	{"wpurl",       required_argument, 0, 'w'},
 	{"output-file", required_argument, 0, 'o'},
@@ -64,6 +65,9 @@ static int getopt_parse(struct options *options, int argc, const char **argv)
 			break;
 		case 'h':
 			options->help = true;
+			break;
+		case 'q':
+			options->quiet = true;
 			break;
 		case '?':
 			snprintf(errstr, sizeof(errstr),
@@ -108,6 +112,7 @@ int options_parse(struct options *options, int argc, const char **argv)
 	options->username = NULL;
 	options->wpurl = NULL;
 	options->output_file = "wordpress.xml";
+	options->quiet = false;
 	options->version = false;
 	options->help = false;
 	options->ignore_ssl_errors = false;
