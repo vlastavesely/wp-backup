@@ -21,7 +21,7 @@
 #include "password-resolver.h"
 #include "err.h"
 
-static const char usage_string[] =
+static const char *usage_string =
 	PACKAGE_NAME " [options]\n"
 	"\n"
 	"options:\n"
@@ -53,7 +53,6 @@ int main(int argc, const char **argv)
 	char *password;
 	int retval;
 
-	/* May fail when invalid or no arguments provided. */
 	retval = options_parse(&options, argc, argv);
 	if (retval != 0) {
 		error(options_errstr());
@@ -66,36 +65,43 @@ int main(int argc, const char **argv)
 	if (options.version)
 		print_version();
 
-	/* FIXME That's DIRTY. What about remove all the support for
-	 * skipping invalid SSL?
-	 */
-	if (options.ignore_ssl_errors)
-		warning("skiping validation of SSL certificate\n"
-			"is considered to be a risk. You should do your\n"
-			"best to fix your server's SSL settings and not\n"
-			"use this option at all!\n");
-
 	wordpress = wordpress_create(options.wpurl);
+	if (IS_ERR(wordpress)) {
+		error("failed to prepare WordPress connection.");
+		retval = PTR_ERR(wordpress);
+		goto out;
+	}
 
 	password = password_resolver_resolve_password();
-	if (IS_ERR(password))
-		die("failed to resolve a password.");
+	if (IS_ERR(password)) {
+		error("failed to resolve a password.");
+		retval = PTR_ERR(password);
+		goto drop_wordpress;
+	}
 
+	/* Log in */
 	retval = wordpress_login(wordpress, options.username, password);
 	memset(password, 0, strlen(password));
 	free(password);
+	if (retval != 0) {
+		error("login failed.");
+		goto drop_wordpress;
+	}
 
-	if (retval != 0)
-		die("login failed.\n");
+	/* Download WXR dump */
+	if (wordpress_export(wordpress, options.output_file) != 0) {
+		error("export failed.");
+		goto drop_wordpress;
+	}
 
-	if (wordpress_export(wordpress, options.output_file) != 0)
-		die("export failed.\n");
+	/* Invalidate HTTP session by log out (for security reasons) */
+	if (wordpress_logout(wordpress) != 0) {
+		error("logout failed.");
+		goto drop_wordpress;
+	}
 
-	if (wordpress_logout(wordpress) != 0)
-		die("logout failed.\n");
-
+drop_wordpress:
 	drop_wordpress(wordpress);
-
 out:
 	return retval;
 }
