@@ -29,11 +29,6 @@ struct http_client {
 	char *cookiejar;
 };
 
-struct string_buffer {
-	char *data;
-	size_t nbytes;
-};
-
 struct http_client *alloc_http_client(void)
 {
 	struct http_client *client;
@@ -42,9 +37,7 @@ struct http_client *alloc_http_client(void)
 	if (!client)
 		return ERR_PTR(-ENOMEM);
 
-	/*
-	 * TODO: Generate random filename
-	 */
+	/* TODO: Generate random filename */
 	client->cookiejar = strdup("/tmp/wp-backup-cookies.txt");
 	return client;
 }
@@ -55,11 +48,14 @@ void drop_http_client(struct http_client *client)
 		return;
 
 	if (client->cookiejar) {
+		/* TODO: zeroize cookiejar */
 		unlink(client->cookiejar);
 		free(client->cookiejar);
 	}
 	free(client);
 }
+
+/******************************************************************************/
 
 struct http_request *alloc_http_request()
 {
@@ -69,9 +65,8 @@ struct http_request *alloc_http_request()
 	if (!request)
 		return ERR_PTR(-ENOMEM);
 
+	memset(request, 0, sizeof(*request));
 	request->method = "GET";
-	request->url = NULL;
-	request->body = NULL;
 	return request;
 }
 
@@ -87,6 +82,8 @@ void drop_http_request(struct http_request *request)
 	free(request);
 }
 
+/******************************************************************************/
+
 static struct http_response *alloc_http_response()
 {
 	struct http_response *response;
@@ -95,10 +92,7 @@ static struct http_response *alloc_http_response()
 	if (!response)
 		return ERR_PTR(-ENOMEM);
 
-	response->code = 0;
-	response->body = NULL;
-	response->length = 0;
-	response->content_type = NULL;
+	memset(response, 0, sizeof(*response));
 	return response;
 }
 
@@ -114,6 +108,13 @@ void drop_http_response(struct http_response *response)
 	free(response);
 }
 
+/******************************************************************************/
+
+struct string_buffer {
+	char *data;
+	size_t nbytes;
+};
+
 static void string_buffer_init(struct string_buffer *str)
 {
 	str->data = NULL;
@@ -127,7 +128,7 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 
 	str->data = realloc(str->data, length + 1);
 	if (!str->data)
-		die("failed to realloc() string buffer.");
+		return -ENOMEM;
 
 	memcpy(str->data + str->nbytes, ptr, size * nmemb);
 	str->data[length] = '\0';
@@ -136,16 +137,19 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 	return size * nmemb;
 }
 
+/******************************************************************************/
+
 /*
  * Initializes default cURL context from request data.
  */
-static CURL *alloc_http_curl(struct http_client *client,
+static CURL *build_curl_instance(struct http_client *client,
 		struct http_request *request)
 {
 	CURL *curl;
 
-	if ((curl = curl_easy_init()) == NULL)
-		die("failed to initialize cURL context.");
+	curl = curl_easy_init();
+	if (!curl)
+		return ERR_PTR(-1);
 
 	curl_easy_setopt(curl, CURLOPT_URL, request->url);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -157,12 +161,15 @@ static CURL *alloc_http_curl(struct http_client *client,
 	/* Save cookies to this file after `curl_easy_cleanup()` called. */
 	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, client->cookiejar);
 
-	if (strcmp(request->method, "POST") == 0) {
-		assert(request->body != NULL);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request->body);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(request->body));
-	}
+	if (strcmp(request->method, "GET") == 0)
+		goto out;
 
+	/* POST request */
+	assert(request->body != NULL);
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request->body);
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(request->body));
+
+out:
 	return curl;
 }
 
@@ -173,13 +180,13 @@ static struct http_response *http_curl_perform(CURL *curl)
 	const char *content_type = NULL;
 
 	if (curl_easy_perform(curl) != CURLE_OK)
-		die("failed to get response from the server.");
+		return ERR_PTR(-1);
 
 	if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code) != 0)
-		die("failed to fetch HTTP status code from response.");
+		return ERR_PTR(-2);
 
 	if (curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &content_type) != 0)
-		die("failed to fetch content-type from response.");
+		return ERR_PTR(-3);
 
 	response = alloc_http_response();
 	response->code = http_code;
@@ -198,11 +205,15 @@ struct http_response *http_client_send(struct http_client *client,
 	CURL *curl;
 
 	string_buffer_init(&str);
-	curl = alloc_http_curl(client, request);
+	curl = build_curl_instance(client, request);
+	if (IS_ERR(curl))
+		return (struct http_response *) curl; /* Error code */
+
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, str_buffer_append);
-
 	response = http_curl_perform(curl);
+	if (IS_ERR(response))
+		goto out;
 
 	/*
 	 * Response takes over the string, it won't be freed here
@@ -210,6 +221,7 @@ struct http_response *http_client_send(struct http_client *client,
 	 */
 	response->body = str.data;
 
+out:
 	curl_easy_cleanup(curl);
 	return response;
 }
@@ -223,14 +235,18 @@ struct http_response *http_client_download_file(struct http_client *client,
 		const char *filename)
 {
 	struct http_response *response;
+	int err;
 	CURL *curl;
 	FILE *fp;
 
 	fp = fopen(filename, "w");
 	if (!fp)
-		die("failed to open file '%s' for writing.", filename);
+		return ERR_PTR(-errno);
 
-	curl = alloc_http_curl(client, request);
+	curl = build_curl_instance(client, request);
+	if (IS_ERR(curl))
+		return (struct http_response *) curl; /* Error code */
+
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 
 	response = http_curl_perform(curl);
