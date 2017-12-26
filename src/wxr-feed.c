@@ -62,6 +62,75 @@ static bool wxr_feed_has_signature_comment(xmlNode *node)
 	return false;
 }
 
+/******************************************************************************/
+
+static void wxr_feed_add_post(struct post **head, struct post *post)
+{
+	struct post **last = head;
+
+	while (*last)
+		last = &(*last)->next;
+
+	*last = post;
+}
+
+static int rss_process_item(xmlNode *item, struct wxr_feed *feed)
+{
+	struct post *post;
+	xmlNode *child;
+	int type = WXR_POST_TYPE_POST;
+	int retval = 0;
+
+	post = malloc(sizeof(*post));
+	if (!post)
+		return -ENOMEM;
+
+	post->next = NULL;
+	for (child = item->children; child; child = child->next) {
+		if (!strcmp((char *) child->name, "title")) {
+			post->name = (char *) xmlNodeGetContent(child);
+		} else if (!strcmp((char *) child->name, "post_type")) {
+			xmlChar *data = xmlNodeGetContent(child);
+			if (!strcmp((char *) data, "page"))
+				type = WXR_POST_TYPE_PAGE;
+			xmlFree(data);
+		}
+	}
+
+	wxr_feed_add_post(type == WXR_POST_TYPE_POST
+		? &feed->posts : &feed->pages, post);
+
+	return retval;
+}
+
+static int rss_process_items(xmlNode *channel, struct wxr_feed *feed)
+{
+	xmlNode *item;
+	int retval = 0;
+
+	for (item = channel->children; item; item = item->next)
+		if (!strcmp((char *) item->name, "item"))
+			if ((retval = rss_process_item(item, feed)) != 0)
+				return retval;
+
+	return retval;
+}
+
+static int wxr_parse_posts_and_pages(struct wxr_feed *feed)
+{
+	xmlNode *channel;
+	int retval = 0;
+
+	for (channel = feed->rss->children; channel; channel = channel->next)
+		if (!strcmp((char *) channel->name, "channel"))
+			if ((retval = rss_process_items(channel, feed)) != 0)
+				return retval;
+
+	return retval;
+}
+
+/******************************************************************************/
+
 /*
  * WXR dump loader.
  *
@@ -101,6 +170,8 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 		err = -EMISSSIG;
 		goto drop_feed;
 	}
+
+	wxr_parse_posts_and_pages(feed);
 
 out:
 	return feed;
