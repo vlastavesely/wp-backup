@@ -184,12 +184,14 @@ out:
  * Saves an export dump to a file. To be considered as success, the response
  * must be of 'text/xml' or 'application/xml' and contain valid XML data.
  */
-int wordpress_export(struct wordpress *connection, const char *filename)
+int wordpress_export(struct wordpress *connection, const char *filename,
+		     bool quiet)
 {
 	struct http_response *response;
 	struct wxr_feed *feed;
+	struct post *walk;
 	char *url;
-	int retval;
+	int retval, posts = 0, pages = 0;
 
 	url = wordpress_build_url(connection->wpurl, "/wp-admin/export.php?content=all&download=true");
 	response = wordpress_download_to_file(connection, url, filename);
@@ -206,6 +208,25 @@ int wordpress_export(struct wordpress *connection, const char *filename)
 //		die(error->message);
 //	}
 	retval = (feed == NULL || response->code != 200);
+
+
+	if (!quiet) {
+		walk = wxr_feed_get_posts(feed);
+		while (walk) {
+			posts++;
+			walk = walk->next;
+		}
+
+		walk = wxr_feed_get_pages(feed);
+		while (walk) {
+			pages++;
+			walk = walk->next;
+		}
+
+		fprintf(stderr, "Backed up %d post%s and %d page%s.\n", posts,
+			posts != 1 ? "s" : "", pages, pages != 1 ? "s" : "");
+	}
+
 
 	if (feed)
 		drop_wxr_feed(feed);

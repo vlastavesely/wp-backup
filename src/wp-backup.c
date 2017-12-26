@@ -89,7 +89,7 @@ int main(int argc, const char **argv)
 	}
 
 	/* Download WXR dump */
-	if (wordpress_export(wordpress, options.output_file) != 0) {
+	if (wordpress_export(wordpress, options.output_file, options.quiet) != 0) {
 		error("export failed.");
 		goto drop_wordpress;
 	}

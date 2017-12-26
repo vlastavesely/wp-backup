@@ -27,7 +27,7 @@ int wordpress_login(struct wordpress *connection,
 		const char *username, const char *password);
 int wordpress_logout(struct wordpress *connection);
 int wordpress_export(struct wordpress *connection,
-		const char *filename);
+		const char *filename, bool quiet);
 struct http_response *wordpress_download_to_file(struct wordpress *connection,
 		const char *url, const char *filename);
 

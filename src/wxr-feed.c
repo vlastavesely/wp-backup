@@ -201,5 +201,5 @@ struct post *wxr_feed_get_posts(struct wxr_feed *feed)
 
 struct post *wxr_feed_get_pages(struct wxr_feed *feed)
 {
-	return feed->posts;
+	return feed->pages;
 }
