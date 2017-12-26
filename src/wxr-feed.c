@@ -25,6 +25,8 @@
 struct wxr_feed {
 	xmlDoc *doc;
 	xmlNode *rss;
+	struct post *posts;
+	struct post *pages;
 };
 
 #define XML_PARSE_FLAGS		XML_PARSE_NOERROR | XML_PARSE_NOWARNING
@@ -80,6 +82,9 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 		goto out;
 	}
 
+	feed->posts = NULL;
+	feed->pages = NULL;
+
 	feed->doc = xmlReadFile(filename, NULL, XML_PARSE_FLAGS);
 	if (!feed->doc) {
 		err = -EINVALXML;
@@ -114,4 +119,16 @@ void drop_wxr_feed(struct wxr_feed *feed)
 		xmlFreeDoc(feed->doc);
 	xmlCleanupParser();
 	free(feed);
+}
+
+/******************************************************************************/
+
+struct post *wxr_feed_get_posts(struct wxr_feed *feed)
+{
+	return feed->posts;
+}
+
+struct post *wxr_feed_get_pages(struct wxr_feed *feed)
+{
+	return feed->posts;
 }
