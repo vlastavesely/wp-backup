@@ -30,6 +30,7 @@ static const char *usage_string =
 	"  -u, --username           username for login into WordPress\n"
 	"  -w, --wpurl              URL of the WordPress installation (without \"wp-admin\" or \"wp-login\")\n"
 	"  -o, --output-file        destination file name for downloaded XML (default: \"wordpress.xml\")\n"
+	"  -q, --quiet              disables output into terminal\n"
 	"      --ignore-ssl-errors  skips SSL certificate validation (this is not a good practice!)\n"
 	"\n"
 	"  " PACKAGE_NAME " reads password from standard input or "
