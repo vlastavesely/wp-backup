@@ -45,7 +45,8 @@ static char *wordpress_build_url(const char *wpurl, const char *path)
 
 	assert(path[0] == '/');
 
-	if ((url = malloc(strlen(wpurl) + strlen(path) + 2)) == NULL)
+	url = malloc(strlen(wpurl) + strlen(path) + 2);
+	if (url == NULL)
 		return ERR_PTR(-ENOMEM);
 
 	strcpy(url, wpurl);
@@ -76,7 +77,8 @@ static char *wordpress_build_login_body(const char *username,
 	 * expanded into '%XX' form, the buffer must be three tines bigger
 	 * than all strings that will be decoded. */
 	len = 32 + (strlen(username) * 3) + (strlen(password) * 3) + 1;
-	if ((body = malloc(len)) == NULL)
+	body = malloc(len);
+	if (body == NULL)
 		return ERR_PTR(-ENOMEM);
 
 	strcpy(body, "log=");
@@ -98,7 +100,8 @@ static void wordpress_match_logout_url(struct wordpress *connection,
 	const char *ptr = NULL;
 	char path[128];
 
-	if ((ptr = strstr(response->body, "/wp-login.php?action=logout"))) {
+	ptr = strstr(response->body, "/wp-login.php?action=logout");
+	if (ptr) {
 		*(strstr(ptr, "\"")) = 0;
 		/*
 		 * Logout URL does contain characters '&' (maybe even other
