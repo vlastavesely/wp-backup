@@ -27,6 +27,7 @@ struct wxr_feed {
 	xmlNode *rss;
 	struct post *posts;
 	struct post *pages;
+	struct post *attachments;
 };
 
 #define XML_PARSE_FLAGS		XML_PARSE_NOERROR | XML_PARSE_NOWARNING
@@ -86,6 +87,7 @@ static int rss_process_item(xmlNode *item, struct wxr_feed *feed)
 		return -ENOMEM;
 
 	post->next = NULL;
+
 	for (child = item->children; child; child = child->next) {
 		if (!strcmp((char *) child->name, "title")) {
 			post->name = (char *) xmlNodeGetContent(child);
@@ -93,12 +95,23 @@ static int rss_process_item(xmlNode *item, struct wxr_feed *feed)
 			xmlChar *data = xmlNodeGetContent(child);
 			if (!strcmp((char *) data, "page"))
 				type = WXR_POST_TYPE_PAGE;
+			else if (!strcmp((char *) data, "attachment"))
+				type = WXR_POST_TYPE_ATTACHMENT;
 			xmlFree(data);
 		}
 	}
 
-	wxr_feed_add_post(type == WXR_POST_TYPE_POST
-		? &feed->posts : &feed->pages, post);
+	switch (type) {
+	case WXR_POST_TYPE_POST:
+		wxr_feed_add_post(&feed->posts, post);
+		break;
+	case WXR_POST_TYPE_PAGE:
+		wxr_feed_add_post(&feed->pages, post);
+		break;
+	case WXR_POST_TYPE_ATTACHMENT:
+		wxr_feed_add_post(&feed->attachments, post);
+		break;
+	}
 
 	return retval;
 }
@@ -116,7 +129,7 @@ static int rss_process_items(xmlNode *channel, struct wxr_feed *feed)
 	return retval;
 }
 
-static int wxr_parse_posts_and_pages(struct wxr_feed *feed)
+static int wxr_parse_posts(struct wxr_feed *feed)
 {
 	xmlNode *channel;
 	int retval = 0;
@@ -151,8 +164,7 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 		goto out;
 	}
 
-	feed->posts = NULL;
-	feed->pages = NULL;
+	memset(feed, 0, sizeof(*feed));
 
 	feed->doc = xmlReadFile(filename, NULL, XML_PARSE_FLAGS);
 	if (!feed->doc) {
@@ -171,7 +183,9 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 		goto drop_feed;
 	}
 
-	wxr_parse_posts_and_pages(feed);
+	err = wxr_parse_posts(feed);
+	if (err)
+		feed = ERR_PTR(err);
 
 out:
 	return feed;
@@ -202,4 +216,9 @@ struct post *wxr_feed_get_posts(struct wxr_feed *feed)
 struct post *wxr_feed_get_pages(struct wxr_feed *feed)
 {
 	return feed->pages;
+}
+
+struct post *wxr_feed_get_attachments(struct wxr_feed *feed)
+{
+	return feed->attachments;
 }
