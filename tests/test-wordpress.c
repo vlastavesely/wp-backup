@@ -7,6 +7,7 @@
  */
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <CUnit/CUnit.h>
 
@@ -33,7 +34,7 @@ static void test_wordpress_login_logout(void)
 	ret = wordpress_login(wordpress, username, password);
 	CU_ASSERT_EQUAL(0, ret);
 
-	ret = wordpress_export(wordpress, output_file);
+	ret = wordpress_export(wordpress, output_file, true);
 	CU_ASSERT_EQUAL(0, ret);
 
 	ret = wordpress_logout(wordpress);
