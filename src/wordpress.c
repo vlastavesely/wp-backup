@@ -198,20 +198,23 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 
 	url = wordpress_build_url(connection->wpurl, "/wp-admin/export.php?content=all&download=true");
 	response = wordpress_download_to_file(connection, url, filename);
+	if (IS_ERR(response)) {
+		retval = PTR_ERR(response);
+		goto out;
+	}
+	drop_http_response(response);
 
 	/*
 	 * Tries to load downloaded XML to check its validity.
 	 * If the data are corrupted, download failed.
 	 */
 	feed = wxr_feed_load(filename);
-	if (IS_ERR(feed))
+	if (IS_ERR(feed)) {
 		retval = PTR_ERR(feed);
+		goto out;
+	}
 
-//	if (error) { FIXME
-//		die(error->message);
-//	}
-	retval = (feed == NULL || response->code != 200);
-
+	retval = 0;
 
 	if (!quiet) {
 		walk = wxr_feed_get_posts(feed);
@@ -230,11 +233,9 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 			posts != 1 ? "s" : "", pages, pages != 1 ? "s" : "");
 	}
 
+	drop_wxr_feed(feed);
 
-	if (feed)
-		drop_wxr_feed(feed);
-
-	drop_http_response(response);
+out:
 	free(url);
 	return retval;
 }
@@ -246,10 +247,10 @@ int wordpress_logout(struct wordpress *connection)
 {
 	struct http_request *request;
 	struct http_response *response;
-	const char *ptr = NULL;
+	const char *ptr;
 
-	if (connection->logout_url == NULL)
-		die("failed to logout - logout URL missing.");
+	if (!connection->logout_url)
+		return -1;
 
 	request = alloc_http_request();
 	request->url = strdup(connection->logout_url);
@@ -258,13 +259,15 @@ int wordpress_logout(struct wordpress *connection)
 	/*
 	 * If the reponse contains a 'loginform', it can be considered
 	 * to be standard login page (so logout has been successful).
+	 *
+	 * TODO: figure out something smarter...
 	 */
-	ptr = strstr((const char *) response->body, "loginform");
+	ptr = strstr(response->body, "loginform");
 
 	drop_http_request(request);
 	drop_http_response(response);
 
-	return ptr == NULL;
+	return ptr != NULL ? 0 : -2;
 }
 
 /*
