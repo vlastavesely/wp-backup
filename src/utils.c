@@ -44,8 +44,6 @@ void urlencode_to_buf(const char *str, char *buf)
 
 static void pack_unicode_char(char **dest, unsigned long c)
 {
-	assert(c <= 0x10ffff); /* maximal value of a valid unicode char */
-
 	if (c <= 0x00007f) {
 		*(*dest)   = c;
 	} else if (c <= 0x0007ff) {
@@ -60,6 +58,9 @@ static void pack_unicode_char(char **dest, unsigned long c)
 		*(*dest)++ = (0x80 | ((c >> 12) & 0x3f));
 		*(*dest)++ = (0x80 | ((c >>  6) & 0x3f));
 		*(*dest)   = (0x80 | ((c >>  0) & 0x3f));
+	} else {
+		warning("invalid unicode character.");
+		*(*dest)   = '?';
 	}
 }
 
