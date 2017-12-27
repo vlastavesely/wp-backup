@@ -121,6 +121,11 @@ static void string_buffer_init(struct string_buffer *str)
 	str->nbytes = 0;
 }
 
+/*
+ * Write callback for cURL. On success, it should return number of bytes
+ * that were actually written. If return value differs, the call is
+ * considered to be failed.
+ */
 static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 	struct string_buffer *str)
 {
@@ -128,7 +133,7 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 
 	str->data = realloc(str->data, length + 1);
 	if (!str->data)
-		return -ENOMEM;
+		return 0;
 
 	memcpy(str->data + str->nbytes, ptr, size * nmemb);
 	str->data[length] = '\0';
