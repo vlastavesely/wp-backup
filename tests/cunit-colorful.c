@@ -8,8 +8,25 @@
  * published by the Free Software Foundation.
  */
 
+#include <time.h>
 #include <assert.h>
 #include "cunit-colorful.h"
+
+static double start_time = 0;
+
+static double get_utimestamp()
+{
+	struct timespec tms;
+	double ts;
+
+	if (!timespec_get(&tms, TIME_UTC) != 0)
+		return -1;
+
+	ts = tms.tv_sec * 1000000;
+	ts += tms.tv_nsec / 1000;
+
+	return ts;
+}
 
 static void cunit_colorful_test_complete_msg_handler(struct CU_Test *test,
 		struct CU_Suite *suite,
@@ -35,6 +52,7 @@ static void cunit_colorful_show_failures(struct CU_FailureRecord *failure)
 static void cunit_colorful_show_summary(void)
 {
 	struct CU_RunSummary *summary = CU_get_run_summary();
+	double elapsed_seconds = (get_utimestamp() - start_time) / 1000000;
 
 	if (summary->nFailureRecords)
 		fprintf(stdout,
@@ -42,12 +60,12 @@ static void cunit_colorful_show_summary(void)
 			summary->nTestsRun, summary->nTestsRun == 1 ? "" : "s",
 			summary->nTestsFailed,
 			summary->nTestsFailed == 1 ? "" : "s",
-			summary->ElapsedTime);
+			elapsed_seconds);
 	else
 		fprintf(stdout,
 			"\x1b[42;1mOK (%d test%s, %1.3f seconds)\x1b[0m\n",
 			summary->nTestsRun, summary->nTestsRun == 1 ? "" : "s",
-			summary->ElapsedTime);
+			elapsed_seconds);
 }
 
 static void cunit_colorful_all_tests_complete_msg_handler(struct CU_FailureRecord *failure)
@@ -87,6 +105,8 @@ CU_ErrorCode CU_colorful_run_tests(void)
 		return CUE_NOREGISTRY;
 
 	if ((code = cunit_colorful_initialize()) == CUE_SUCCESS) {
+
+		start_time = get_utimestamp();
 		code = CU_run_all_tests();
 
 		/*
