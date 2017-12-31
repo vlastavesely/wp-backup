@@ -1,0 +1,61 @@
+.TH WP-BACKUP 1
+
+.SH NAME
+wp-backup - simple WordPress backup tool
+
+.SH SYNOPSIS
+.B wp-backup
+[\fB\-h\fR | \fB\-\-help\fR]
+[\fB\-v\fR | \fB\-\-version\fR]
+[\fB\-u\fR \fIUSERNAME\fR | \fB\-\-username\fR \fIUSERNAME\fR]
+[\fB\-w\fR \fIURL\fR | \fB\-\-wpurl\fR \fIURL\fR]
+[\fB\-o\fR \fIFILE\fR | \fB\-\-output-file\fR \fIFILE\fR]
+[\fB\-q\fR | \fB\-\-quiet\fR]
+[\fB\-\-ignore-ssl-errors\fR]
+
+.SH DESCRIPTION
+.B wp-backup
+is a simple program that is able to connect to a WordPress server and download WXR dump.
+
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+shows this help and exits.
+
+.TP
+.BR \-v ", " \-\-version
+shows version number and exits.
+
+.TP
+.BR \-u ", " \-\-username " " \fIUSERNAME\fR
+username for login into WordPress.
+
+.TP
+.BR \-w ", " \-\-wpurl " " \fIURL\fR
+URL of the WordPress installation (without "wp-admin" or "wp-login").
+
+.TP
+.BR \-o ", " \-\-output-file " " \fIFILE\fR
+destination file name for downloaded XML (default: "wordpress.xml").
+
+.TP
+.BR \-q ", " \-\-quiet
+disables output into terminal.
+
+.TP
+.BR \-\-ignore-ssl-errors
+skips SSL certificate validation.
+
+.SH COPYRIGHT
+Copyright (c) 2017 Vlasta Vesely
+
+.SH LICENSING AND WARRANTY
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2 as published
+by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+

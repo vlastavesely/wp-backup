@@ -1,6 +1,7 @@
 # Build and temporary files
 /wp-backup
 /tests/test
+/doc/*.gz
 *.o
 *.d
 *~
