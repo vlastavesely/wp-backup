@@ -47,15 +47,21 @@ tests/test: $(TEST_OBJFILES)
 %.o: %.c Makefile
 	$(CC) $(CFLAGS) $(LIBS) -MMD -MP -c $< -o $@
 
-install: all
-	cp -f $(PROGNAME) /usr/$(PROGNAME)
+
+doc/wp-backup.1.gz:
+	gzip < doc/wp-backup.1 > doc/wp-backup.1.gz
+
+install: all doc/wp-backup.1.gz
+	cp -f $(PROGNAME) /usr/bin/$(PROGNAME)
 	chmod +x /usr/bin/$(PROGNAME)
+	cp -f doc/wp-backup.1.gz /usr/share/man/man1
 
 uninstall:
 	$(RM) -f /usr/bin/wp-backup
+	$(RM) -f /usr/share/man/man1/wp-backup.1.gz
 
 clean:
-	$(RM) -f */*.d */*.o $(PROGNAME) tests/test
+	$(RM) -f */*.d */*.o $(PROGNAME) tests/test doc/*.gz
 	$(RM) -f */*.gcda */*.gcno
 
 distclean: clean
