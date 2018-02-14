@@ -9,6 +9,7 @@
 #include <CUnit/CUnit.h>
 
 #include "../src/http.h"
+#include "../src/err.h"
 
 static void test_http_request(void)
 {
@@ -38,7 +39,10 @@ static void test_http_request_send(void)
 	request->url = strdup("http://localhost");
 
 	response = http_client_send(client, request);
-	CU_ASSERT_EQUAL(200, response->code);
+	CU_ASSERT_EQUAL(0, IS_ERR(response));
+
+	if (!IS_ERR(response))
+		CU_ASSERT_EQUAL(200, response->code);
 
 	drop_http_client(client);
 	drop_http_request(request);
