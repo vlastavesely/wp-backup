@@ -19,7 +19,7 @@ static double get_utimestamp()
 	struct timespec tms;
 	double ts;
 
-	if (!timespec_get(&tms, TIME_UTC) != 0)
+	if (clock_gettime(CLOCK_REALTIME, &tms))
 		return -1;
 
 	ts = tms.tv_sec * 1000000;
