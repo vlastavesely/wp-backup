@@ -5,6 +5,7 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
@@ -15,11 +16,14 @@ PKG_CHECK_MODULES(LIBXML, libxml-2.0)
 AC_CHECK_HEADERS([stdlib.h string.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_C_INLINE
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memset strdup strstr strchr strtoul])
+AC_CHECK_FUNCS([clock_gettime memset setenv strchr strdup strstr strtoul])
 AC_FUNC_REALLOC
 
 # Enable for gcov if option --enable-gcov is present.
