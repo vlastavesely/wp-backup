@@ -15,5 +15,8 @@
 #include <termios.h>
 #include <errno.h>
 #include <ctype.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #endif /* __COMPAT_H */

@@ -42,13 +42,47 @@ struct http_client *alloc_http_client(void)
 	return client;
 }
 
+static int zeroize_file(const char *filename)
+{
+	struct stat st;
+	void *map;
+	size_t len;
+	int fd, retval = 0;
+
+	if (stat(filename, &st) != 0) {
+		retval = -errno;
+		goto out;
+	}
+
+	fd = open(filename, O_RDWR);
+	if (fd == -1) {
+		retval = -errno;
+		goto out;
+	}
+
+	len = st.st_size;
+	map = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (map == MAP_FAILED) {
+		retval = -errno;
+		goto out;
+	}
+
+	memset(map, 0, len);
+
+	munmap(map, len);
+	close(fd);
+
+out:
+	return retval;
+}
+
 void drop_http_client(struct http_client *client)
 {
 	if (IS_ERR_OR_NULL(client))
 		return;
 
 	if (client->cookiejar) {
-		/* TODO: zeroize cookiejar */
+		zeroize_file(client->cookiejar);
 		unlink(client->cookiejar);
 		free(client->cookiejar);
 	}
