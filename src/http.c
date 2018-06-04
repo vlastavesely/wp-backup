@@ -21,6 +21,8 @@
 
 #include <curl/curl.h>
 
+static const char *cookie_jar_template = "/tmp/wp-backup-cookies-XXXXXX";
+
 /*
  * Structure for session data storage. It holds data we need between
  * multiple HTTP requests sent.
@@ -32,14 +34,28 @@ struct http_client {
 struct http_client *alloc_http_client(void)
 {
 	struct http_client *client;
+	char *jarname = strdup(cookie_jar_template);
+	int fd = mkstemp(jarname);
+
+	if (fd == -1) {
+		client = ERR_PTR(-errno);
+		goto err;
+	}
+
+	close(fd);
 
 	client = malloc(sizeof(*client));
-	if (!client)
-		return ERR_PTR(-ENOMEM);
+	if (client == NULL) {
+		client = ERR_PTR(-ENOMEM);
+		goto err;
+	}
 
-	/* TODO: Generate random filename */
-	client->cookiejar = strdup("/tmp/wp-backup-cookies.txt");
+	client->cookiejar = jarname;
+out:
 	return client;
+err:
+	free(jarname);
+	goto out;
 }
 
 static int zeroize_file(const char *filename)
