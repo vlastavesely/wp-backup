@@ -171,6 +171,11 @@ int wordpress_login(struct wordpress *connection, const char *username,
 	request->body = wordpress_build_login_body(username, password);
 
 	response = http_client_send(connection->http_client, request);
+	if (IS_ERR(response)) {
+		retval = -1;
+		goto out;
+	}
+
 	wordpress_match_logout_url(connection, response);
 	retval = connection->logout_url ? 0 : -1;
 
