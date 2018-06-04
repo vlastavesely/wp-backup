@@ -14,7 +14,7 @@
 #include "../src/wordpress.h"
 
 static const char *wpurl = "http://localhost/wordpress";
-static const char *username = "test";
+static const char *username = "admin";
 static const char *password = "secret";
 static const char *output_file = "/tmp/wp-backup-test.xml";
 

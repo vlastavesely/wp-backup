@@ -5,7 +5,7 @@ version=4.5
 
 archive="$version-branch.zip"
 archive_url="https://github.com/WordPress/WordPress/archive/$archive"
-installation_dir="/var/www/html/wordpress-$version"
+installation_dir="/var/www/html/wordpress"
 tmp_dir="/tmp/wpbackup-test"
 
 mysql_user=root
