@@ -17,6 +17,8 @@
 
 PROGNAME := wp-backup
 
+PREFIX=/usr
+
 SRCFILES := $(shell find src -type f -name "*.c")
 OBJFILES := $(patsubst %.c, %.o, $(SRCFILES))
 TEST_SRCFILES := $(shell find tests -type f -name "*.c")
@@ -52,13 +54,13 @@ doc/wp-backup.1.gz:
 	gzip < doc/wp-backup.1 > doc/wp-backup.1.gz
 
 install: all doc/wp-backup.1.gz
-	cp -f $(PROGNAME) /usr/bin/$(PROGNAME)
-	chmod +x /usr/bin/$(PROGNAME)
-	cp -f doc/wp-backup.1.gz /usr/share/man/man1
+	cp -f $(PROGNAME) $(PREFIX)/bin/$(PROGNAME)
+	chmod +x $(PREFIX)/bin/$(PROGNAME)
+	cp -f doc/wp-backup.1.gz $(PREFIX)/share/man/man1
 
 uninstall:
-	$(RM) -f /usr/bin/wp-backup
-	$(RM) -f /usr/share/man/man1/wp-backup.1.gz
+	$(RM) -f $(PREFIX)/bin/wp-backup
+	$(RM) -f $(PREFIX)/share/man/man1/wp-backup.1.gz
 
 clean:
 	$(RM) -f */*.d */*.o $(PROGNAME) tests/test doc/*.gz
