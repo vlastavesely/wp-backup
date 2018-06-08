@@ -28,11 +28,6 @@ struct options {
 	int ignore_ssl_errors;
 };
 
-#define EUNRECOG	1
-#define EMISSARG	2
-#define EBADARGVAL	3
-
 int options_parse(struct options *options, int argc, const char **argv);
-char *options_errstr();
 
 #endif /* __OPTIONS_H */

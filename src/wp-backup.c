@@ -55,10 +55,8 @@ int main(int argc, const char **argv)
 	int retval;
 
 	retval = options_parse(&options, argc, argv);
-	if (retval != 0) {
-		error(options_errstr());
+	if (retval != 0)
 		goto out;
-	}
 
 	if (options.help)
 		print_usage();

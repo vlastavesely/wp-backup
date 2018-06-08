@@ -10,7 +10,15 @@
 #include <getopt.h>
 #include <stdlib.h>
 
+#include "../src/err.h"
 #include "../src/options.h"
+
+char errbuf[256];
+
+static void test_error(const char *err, va_list params)
+{
+	vsnprintf(errbuf, sizeof(errbuf), err, params);
+}
 
 static void getopt_reset(void)
 {
@@ -61,61 +69,50 @@ static void test_options_options_parse_quiet(void)
 static void test_options_options_parse_missing_username(void)
 {
 	struct options options;
-	char *errstr;
 	const char *argv[]
 		= {"./progname", "--wpurl", "https://example.com/"};
 
-	getopt_reset();
-	CU_ASSERT_EQUAL(-EMISSARG, options_parse(&options, 3, argv));
 
-	errstr = options_errstr();
-	CU_ASSERT_STRING_EQUAL("username cannot be empty.", errstr);
-	free(errstr);
+	set_error_routine(test_error);
+	getopt_reset();
+	CU_ASSERT_EQUAL(-1, options_parse(&options, 3, argv));
+	CU_ASSERT_STRING_EQUAL("username cannot be empty.", errbuf);
 }
 
 static void test_options_options_parse_missing_wpurl(void)
 {
 	struct options options;
-	char *errstr;
 	const char *argv[]
 		= {"./progname", "--username", "admin"};
 
+	set_error_routine(test_error);
 	getopt_reset();
-	CU_ASSERT_EQUAL(-EMISSARG, options_parse(&options, 3, argv));
-
-	errstr = options_errstr();
-	CU_ASSERT_STRING_EQUAL("WordPress URL cannot be empty.", errstr);
-	free(errstr);
+	CU_ASSERT_EQUAL(-1, options_parse(&options, 3, argv));
+	CU_ASSERT_STRING_EQUAL("WordPress URL cannot be empty.", errbuf);
 }
 
 static void test_options_options_parse_bad_wpurl(void)
 {
 	struct options options;
-	char *errstr;
 	const char *argv[]
 		= {"./progname", "-u", "user", "--wpurl", "not-an-url"};
 
+	set_error_routine(test_error);
 	getopt_reset();
-	CU_ASSERT_EQUAL(-EBADARGVAL, options_parse(&options, 5, argv));
-
-	errstr = options_errstr();
-	CU_ASSERT_STRING_EQUAL("WordPress URL does not have 'http://' or 'https://' prefix.", errstr);
-	free(errstr);
+	CU_ASSERT_EQUAL(-1, options_parse(&options, 5, argv));
+	CU_ASSERT_STRING_EQUAL("WordPress URL does not have 'http://' or 'https://' prefix.", errbuf);
 }
 
 static void test_options_options_parse_missing_unrecognized(void)
 {
 	struct options options;
-	char *errstr;
 	const char *argv[]
 		= {"./progname", "--xxx"};
 
+	set_error_routine(test_error);
 	getopt_reset();
-	CU_ASSERT_EQUAL(-EUNRECOG, options_parse(&options, 2, argv));
-
-	errstr = options_errstr();
-	CU_ASSERT_STRING_EQUAL("unrecognized option '--xxx'.", errstr);
-	free(errstr);
+	CU_ASSERT_EQUAL(-1, options_parse(&options, 2, argv));
+	CU_ASSERT_STRING_EQUAL("unrecognized option '--xxx'.", errbuf);
 }
 
 static void test_options_options_parse_short(void)

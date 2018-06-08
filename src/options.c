@@ -32,8 +32,6 @@ static const struct option long_opts[] = {
 	{0, 0, 0, 0}
 };
 
-static char errstr[256];
-
 static int getopt_parse(struct options *options, int argc, const char **argv)
 {
 	int opt_index = 0;
@@ -70,10 +68,9 @@ static int getopt_parse(struct options *options, int argc, const char **argv)
 			options->quiet = true;
 			break;
 		case '?':
-			snprintf(errstr, sizeof(errstr),
-				"unrecognized option '-%s'.", optopt ?
+			error("unrecognized option '-%s'.", optopt ?
 				(char *) &(optopt) : argv[optind - 1] + 1);
-			return -EUNRECOG;
+			return -1;
 		default:
 			break;
 		}
@@ -84,25 +81,31 @@ static int getopt_parse(struct options *options, int argc, const char **argv)
 
 static int validate_options(struct options *options)
 {
+	int retval = 0;
+
 	if (options->help || options->version)
-		return 0;
+		goto out;
 
 	if (!options->username) {
-		strcpy(errstr, "username cannot be empty.");
-		return -EMISSARG;
+		error("username cannot be empty.");
+		retval = -1;
+		goto out;
 	}
 	if (!options->wpurl) {
-		strcpy(errstr, "WordPress URL cannot be empty.");
-		return -EMISSARG;
+		error("WordPress URL cannot be empty.");
+		retval = -1;
+		goto out;
 	}
 	if (strncmp(options->wpurl, "https://", 8) &&
 	    strncmp(options->wpurl, "http://", 7)) {
-		strcpy(errstr, "WordPress URL does not have 'http://' "
+		error("WordPress URL does not have 'http://' "
 			       "or 'https://' prefix.");
-		return -EBADARGVAL;
+		retval = -1;
+		goto out;
 	}
 
-	return 0;
+out:
+	return retval;
 }
 
 int options_parse(struct options *options, int argc, const char **argv)
@@ -117,24 +120,20 @@ int options_parse(struct options *options, int argc, const char **argv)
 	options->help = false;
 	options->ignore_ssl_errors = false;
 
-	memset(errstr, 0, sizeof(errstr));
-
-	/* No arguments provided */
+	/* No arguments provided, show usage */
 	if (argc == 1) {
 		options->help = true;
 		goto out;
 	}
 
-	if ((retval = getopt_parse(options, argc, argv)) != 0)
+	retval = getopt_parse(options, argc, argv);
+	if (retval != 0)
 		goto out;
-	if ((retval = validate_options(options)) != 0)
+
+	retval = validate_options(options);
+	if (retval != 0)
 		goto out;
 
 out:
 	return retval;
-}
-
-char *options_errstr()
-{
-	return strdup(errstr);
 }
