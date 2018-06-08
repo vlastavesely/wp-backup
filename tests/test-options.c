@@ -100,7 +100,7 @@ static void test_options_options_parse_bad_wpurl(void)
 	set_error_routine(test_error);
 	getopt_reset();
 	CU_ASSERT_EQUAL(-1, options_parse(&options, 5, argv));
-	CU_ASSERT_STRING_EQUAL("WordPress URL does not have 'http://' or 'https://' prefix.", errbuf);
+	CU_ASSERT_STRING_EQUAL("WordPress URL does not have 'http[s]://' prefix.", errbuf);
 }
 
 static void test_options_options_parse_missing_unrecognized(void)

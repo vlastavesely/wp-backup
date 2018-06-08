@@ -81,36 +81,31 @@ static int getopt_parse(struct options *options, int argc, const char **argv)
 
 static int validate_options(struct options *options)
 {
-	int retval = 0;
-
 	if (options->help || options->version)
-		goto out;
+		return 0;
 
 	if (!options->username) {
 		error("username cannot be empty.");
-		retval = -1;
-		goto out;
-	}
-	if (!options->wpurl) {
-		error("WordPress URL cannot be empty.");
-		retval = -1;
-		goto out;
-	}
-	if (strncmp(options->wpurl, "https://", 8) &&
-	    strncmp(options->wpurl, "http://", 7)) {
-		error("WordPress URL does not have 'http://' "
-			       "or 'https://' prefix.");
-		retval = -1;
-		goto out;
+		return -1;
 	}
 
-out:
-	return retval;
+	if (!options->wpurl) {
+		error("WordPress URL cannot be empty.");
+		return -1;
+	}
+
+	if (strncmp(options->wpurl, "https://", 8) &&
+	    strncmp(options->wpurl, "http://", 7)) {
+		error("WordPress URL does not have 'http[s]://' prefix.");
+		return -1;
+	}
+
+	return 0;
 }
 
 int options_parse(struct options *options, int argc, const char **argv)
 {
-	int retval = 0;
+	int retval;
 
 	options->username = NULL;
 	options->wpurl = NULL;
@@ -123,17 +118,16 @@ int options_parse(struct options *options, int argc, const char **argv)
 	/* No arguments provided, show usage */
 	if (argc == 1) {
 		options->help = true;
-		goto out;
+		return 0;
 	}
 
 	retval = getopt_parse(options, argc, argv);
 	if (retval != 0)
-		goto out;
+		return retval;
 
 	retval = validate_options(options);
 	if (retval != 0)
-		goto out;
+		return retval;
 
-out:
-	return retval;
+	return 0;
 }

@@ -40,7 +40,7 @@ char *password_resolver_resolve_password(void)
 	struct termios oflags, nflags;
 	char buffer[256];
 	char *password;
-	int err;
+	int saved_errno;
 
 	/*
 	 * If environmental variable WPPASS is set, consider its contents
@@ -64,24 +64,24 @@ char *password_resolver_resolve_password(void)
 
 		fprintf(stderr, "Enter your WordPress password: ");
 
-		if (fgets(buffer, sizeof buffer, stdin) == NULL)
+		if (fgets(buffer, sizeof(buffer), stdin) == NULL)
 			return ERR_PTR(-1);
 
 		if (tcsetattr(0, TCSANOW, &oflags) != 0) {
-			err = errno;
+			saved_errno = errno;
 			memset(buffer, 0, sizeof(buffer));
-			return ERR_PTR(-err);
+			return ERR_PTR(-saved_errno);
 		}
 
 	} else {
 		/* Read from piped input. */
-		if (fgets(buffer, sizeof buffer, stdin) == NULL)
+		if (fgets(buffer, sizeof(buffer), stdin) == NULL)
 			return ERR_PTR(-1);
 	}
 
 	trim_trailing_newlines(buffer);
 	password = strdup(buffer);
-	memset(buffer, 0, sizeof buffer);
+	memset(buffer, 0, sizeof(buffer));
 
 	return password;
 }
