@@ -44,6 +44,11 @@ static inline int IS_ERR_OR_NULL(const void *ptr)
 	return !ptr || IS_ERR_VALUE((uintptr_t) ptr);
 }
 
+static inline void *ERR_CAST(const void *ptr)
+{
+	return (void *) ptr;
+}
+
 void set_warning_routine(void (*routine)(const char *warn, va_list params));
 void set_error_routine(void (*routine)(const char *err, va_list params));
 void set_die_routine(void (*routine)(const char *err, va_list params));

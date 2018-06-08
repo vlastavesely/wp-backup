@@ -70,24 +70,27 @@ static int zeroize_file(const char *filename)
 		goto out;
 	}
 
+	len = st.st_size;
+	if (len == 0)
+		goto out;
+
 	fd = open(filename, O_RDWR);
 	if (fd == -1) {
 		retval = -errno;
 		goto out;
 	}
 
-	len = st.st_size;
 	map = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (map == MAP_FAILED) {
 		retval = -errno;
-		goto out;
+		goto close_fd;
 	}
 
 	memset(map, 0, len);
-
 	munmap(map, len);
-	close(fd);
 
+close_fd:
+	close(fd);
 out:
 	return retval;
 }
@@ -98,8 +101,10 @@ void drop_http_client(struct http_client *client)
 		return;
 
 	if (client->cookiejar) {
-		zeroize_file(client->cookiejar);
-		unlink(client->cookiejar);
+		if (zeroize_file(client->cookiejar) != 0)
+			error("failed to zeroize cookie jar.");
+		if (unlink(client->cookiejar) != 0)
+			error("failed to remove cookie jar.");
 		free(client->cookiejar);
 	}
 	free(client);
@@ -125,10 +130,8 @@ void drop_http_request(struct http_request *request)
 	if (IS_ERR_OR_NULL(request))
 		return;
 
-	if (request->url)
-		free(request->url);
-	if (request->body)
-		free(request->body);
+	free(request->url);
+	free(request->body);
 	free(request);
 }
 
@@ -151,10 +154,8 @@ void drop_http_response(struct http_response *response)
 	if (IS_ERR_OR_NULL(response))
 		return;
 
-	if (response->body)
-		free(response->body);
-	if (response->content_type)
-		free(response->content_type);
+	free(response->body);
+	free(response->content_type);
 	free(response);
 }
 
@@ -167,6 +168,13 @@ struct string_buffer {
 
 static void string_buffer_init(struct string_buffer *str)
 {
+	str->data = NULL;
+	str->nbytes = 0;
+}
+
+static void string_buffer_clear(struct string_buffer *str)
+{
+	free(str->data);
 	str->data = NULL;
 	str->nbytes = 0;
 }
@@ -259,16 +267,16 @@ struct http_response *http_client_send(struct http_client *client,
 	struct string_buffer str;
 	CURL *curl;
 
-	string_buffer_init(&str);
 	curl = build_curl_instance(client, request);
 	if (IS_ERR(curl))
-		return (struct http_response *) curl; /* Error code */
+		return ERR_CAST(curl);
 
+	string_buffer_init(&str);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, str_buffer_append);
 	response = http_curl_perform(curl);
 	if (IS_ERR(response))
-		goto out;
+		goto err;
 
 	/*
 	 * Response takes over the string, it won't be freed here
@@ -279,6 +287,9 @@ struct http_response *http_client_send(struct http_client *client,
 out:
 	curl_easy_cleanup(curl);
 	return response;
+err:
+	string_buffer_clear(&str);
+	goto out;
 }
 
 /*
