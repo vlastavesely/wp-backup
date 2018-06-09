@@ -66,7 +66,7 @@ int main(int argc, const char **argv)
 
 	wordpress = wordpress_create(options.wpurl);
 	if (IS_ERR(wordpress)) {
-		error("failed to prepare WordPress connection.");
+		error("failed to prepare a WordPress connection.");
 		retval = PTR_ERR(wordpress);
 		goto out;
 	}
