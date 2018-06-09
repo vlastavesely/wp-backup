@@ -56,7 +56,7 @@ static bool wxr_feed_has_signature_comment(xmlNode *node)
 		ptr = strstr(content, "This is a WordPress eXtended RSS file");
 		xmlFree(content);
 
-		if (ptr)
+		if (ptr != NULL)
 			return true;
 	}
 
@@ -65,17 +65,8 @@ static bool wxr_feed_has_signature_comment(xmlNode *node)
 
 /******************************************************************************/
 
-static void wxr_feed_add_post(struct post **head, struct post *post)
-{
-	struct post **last = head;
-
-	while (*last)
-		last = &(*last)->next;
-
-	*last = post;
-}
-
-static int rss_process_item(xmlNode *item, struct wxr_feed *feed)
+static int rss_process_item(xmlNode *item, struct post **posts,
+			    struct post **pages, struct post **attachments)
 {
 	struct post *post;
 	xmlNode *child;
@@ -103,13 +94,16 @@ static int rss_process_item(xmlNode *item, struct wxr_feed *feed)
 
 	switch (type) {
 	case WXR_POST_TYPE_POST:
-		wxr_feed_add_post(&feed->posts, post);
+		*posts = post;
+		posts = &(*posts)->next;
 		break;
 	case WXR_POST_TYPE_PAGE:
-		wxr_feed_add_post(&feed->pages, post);
+		*pages = post;
+		pages = &(*pages)->next;
 		break;
 	case WXR_POST_TYPE_ATTACHMENT:
-		wxr_feed_add_post(&feed->attachments, post);
+		*attachments = post;
+		attachments = &(*attachments)->next;
 		break;
 	}
 
@@ -122,9 +116,12 @@ static int rss_process_items(xmlNode *channel, struct wxr_feed *feed)
 	int retval = 0;
 
 	for (item = channel->children; item; item = item->next)
-		if (!strcmp((char *) item->name, "item"))
-			if ((retval = rss_process_item(item, feed)) != 0)
+		if (strcmp((char *) item->name, "item") == 0) {
+			retval = rss_process_item(item, &(feed->posts),
+				&(feed->pages), &(feed->attachments));
+			if (retval != 0)
 				return retval;
+		}
 
 	return retval;
 }
