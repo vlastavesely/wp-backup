@@ -46,13 +46,13 @@ struct wxr_feed {
  */
 static bool wxr_feed_has_signature_comment(xmlNode *node)
 {
-	xmlChar *content;
+	char *content;
 	const char *ptr;
 
 	while (node->prev && node->prev->type == XML_COMMENT_NODE) {
 		node = node->prev;
 
-		content = xmlNodeGetContent(node);
+		content = (char *) xmlNodeGetContent(node);
 		ptr = strstr(content, "This is a WordPress eXtended RSS file");
 		xmlFree(content);
 
@@ -170,7 +170,7 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 	}
 
 	feed->rss = xmlDocGetRootElement(feed->doc);
-	if (strcmp("rss", feed->rss->name)) {
+	if (strcmp("rss", (char *) feed->rss->name)) {
 		err = -EINVALROOT;
 		goto drop_feed;
 	}

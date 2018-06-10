@@ -59,10 +59,13 @@ static void test_options_options_parse_version(void)
 static void test_options_options_parse_quiet(void)
 {
 	struct options options;
-	const char *argv[] = {"./progname", "--quiet"};
+	const char *argv[]
+		= {"./progname", "--quiet",
+		   "-u", "admin",
+		   "--wpurl", "https://example.com/"};
 
 	getopt_reset();
-	CU_ASSERT_EQUAL(0, options_parse(&options, 2, argv));
+	CU_ASSERT_EQUAL(0, options_parse(&options, 6, argv));
 	CU_ASSERT_TRUE(options.quiet);
 }
 
@@ -156,6 +159,8 @@ void test_options_add_tests(struct CU_Suite *suite)
 		test_options_options_parse_help_explicit);
 	CU_add_test(suite, "test_options_options_parse_version",
 		test_options_options_parse_version);
+	CU_add_test(suite, "test_options_options_parse_quiet",
+		test_options_options_parse_quiet);
 	CU_add_test(suite, "test_options_options_parse_missing_username",
 		test_options_options_parse_missing_username);
 	CU_add_test(suite, "test_options_options_parse_missing_wpurl",
