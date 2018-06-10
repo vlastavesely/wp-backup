@@ -46,7 +46,7 @@ char *password_resolver_resolve_password(void)
 	 * If environmental variable WPPASS is set, consider its contents
 	 * to be user's password. 
 	 */
-	if (password = getenv("WPPASS")) {
+	if ((password = getenv("WPPASS"))) {
 		password = strdup(password);
 		unsetenv("WPPASS");
 		return password;

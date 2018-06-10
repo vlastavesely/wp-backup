@@ -301,7 +301,6 @@ struct http_response *http_client_download_file(struct http_client *client,
 		const char *filename)
 {
 	struct http_response *response;
-	int err;
 	CURL *curl;
 	FILE *fp;
 
