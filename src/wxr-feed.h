@@ -22,14 +22,18 @@
 #define EMISSSIG	2
 #define EINVALROOT	3
 
-#define WXR_POST_TYPE_POST		0
-#define WXR_POST_TYPE_PAGE		1
-#define WXR_POST_TYPE_ATTACHMENT	2
+enum post_type {
+	WXR_POST_TYPE_POST = 0,
+	WXR_POST_TYPE_PAGE = 1,
+	WXR_POST_TYPE_ATTACHMENT = 2
+};
 
 struct wxr_feed;
 
 struct post {
 	char *name;
+	char *url;
+	enum post_type type;
 	struct post *next;
 };
 

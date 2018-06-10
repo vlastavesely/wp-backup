@@ -65,65 +65,71 @@ static bool wxr_feed_has_signature_comment(xmlNode *node)
 
 /******************************************************************************/
 
-static int rss_process_item(xmlNode *item, struct post **posts,
-			    struct post **pages, struct post **attachments)
+static struct post *rss_parse_post(xmlNode *item)
 {
 	struct post *post;
 	xmlNode *child;
-	int type = WXR_POST_TYPE_POST;
-	int retval = 0;
 
 	post = malloc(sizeof(*post));
-	if (!post)
-		return -ENOMEM;
+	if (post == NULL)
+		return ERR_PTR(-ENOMEM);
 
+	post->type = WXR_POST_TYPE_POST;
 	post->next = NULL;
 
 	for (child = item->children; child; child = child->next) {
-		if (!strcmp((char *) child->name, "title")) {
+		if (strcmp((char *) child->name, "title") == 0) {
 			post->name = (char *) xmlNodeGetContent(child);
-		} else if (!strcmp((char *) child->name, "post_type")) {
+
+		} else if (strcmp((char *) child->name, "post_type") == 0) {
 			xmlChar *data = xmlNodeGetContent(child);
-			if (!strcmp((char *) data, "page"))
-				type = WXR_POST_TYPE_PAGE;
+
+			if (strcmp((char *) data, "page") == 0)
+				post->type = WXR_POST_TYPE_PAGE;
 			else if (!strcmp((char *) data, "attachment"))
-				type = WXR_POST_TYPE_ATTACHMENT;
+				post->type = WXR_POST_TYPE_ATTACHMENT;
+
 			xmlFree(data);
+		} else if (strcmp((char *) child->name, "link") == 0) {
+			post->url = (char *) xmlNodeGetContent(child);
 		}
 	}
 
-	switch (type) {
-	case WXR_POST_TYPE_POST:
-		*posts = post;
-		posts = &(*posts)->next;
-		break;
-	case WXR_POST_TYPE_PAGE:
-		*pages = post;
-		pages = &(*pages)->next;
-		break;
-	case WXR_POST_TYPE_ATTACHMENT:
-		*attachments = post;
-		attachments = &(*attachments)->next;
-		break;
-	}
-
-	return retval;
+	return post;
 }
 
 static int rss_process_items(xmlNode *channel, struct wxr_feed *feed)
 {
 	xmlNode *item;
-	int retval = 0;
+	struct post *post;
+	struct post **posts = &(feed->posts);
+	struct post **pages = &(feed->pages);
+	struct post **attachments = &(feed->attachments);
 
 	for (item = channel->children; item; item = item->next)
 		if (strcmp((char *) item->name, "item") == 0) {
-			retval = rss_process_item(item, &(feed->posts),
-				&(feed->pages), &(feed->attachments));
-			if (retval != 0)
-				return retval;
+
+			post = rss_parse_post(item);
+			if (IS_ERR(post))
+				return -1;
+
+			switch (post->type) {
+			case WXR_POST_TYPE_POST:
+				*posts = post;
+				posts = &(*posts)->next;
+				break;
+			case WXR_POST_TYPE_PAGE:
+				*pages = post;
+				pages = &(*pages)->next;
+				break;
+			case WXR_POST_TYPE_ATTACHMENT:
+				*attachments = post;
+				attachments = &(*attachments)->next;
+				break;
+			}
 		}
 
-	return retval;
+	return 0;
 }
 
 static int wxr_parse_posts(struct wxr_feed *feed)
@@ -132,9 +138,11 @@ static int wxr_parse_posts(struct wxr_feed *feed)
 	int retval = 0;
 
 	for (channel = feed->rss->children; channel; channel = channel->next)
-		if (!strcmp((char *) channel->name, "channel"))
-			if ((retval = rss_process_items(channel, feed)) != 0)
+		if (strcmp((char *) channel->name, "channel") == 0) {
+			retval = rss_process_items(channel, feed);
+			if (retval != 0)
 				return retval;
+		}
 
 	return retval;
 }
