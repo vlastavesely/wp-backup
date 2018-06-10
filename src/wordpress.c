@@ -295,7 +295,7 @@ struct http_response *wordpress_download_to_file(struct wordpress *connection,
 
 	request = alloc_http_request();
 	if (IS_ERR(request)) {
-		response = ERR_CAST(response);
+		response = ERR_CAST(request);
 		goto out;
 	}
 

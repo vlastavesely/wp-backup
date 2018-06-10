@@ -33,6 +33,7 @@ struct wxr_feed;
 struct post {
 	char *name;
 	char *url;
+	char *attachment_url;
 	enum post_type type;
 	struct post *next;
 };

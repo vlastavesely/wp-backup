@@ -75,6 +75,7 @@ static struct post *rss_parse_post(xmlNode *item)
 		return ERR_PTR(-ENOMEM);
 
 	post->type = WXR_POST_TYPE_POST;
+	post->attachment_url = NULL;
 	post->next = NULL;
 
 	for (child = item->children; child; child = child->next) {
@@ -92,6 +93,8 @@ static struct post *rss_parse_post(xmlNode *item)
 			xmlFree(data);
 		} else if (strcmp((char *) child->name, "link") == 0) {
 			post->url = (char *) xmlNodeGetContent(child);
+		} else if (strcmp((char *) child->name, "attachment_url") == 0) {
+			post->attachment_url = (char *) xmlNodeGetContent(child);
 		}
 	}
 
