@@ -107,3 +107,63 @@ void html_decode_entities_to_buf(const char *str, char *buf)
 	}
 	*ptr = '\0';
 }
+
+char *mktemp_filename(const char *template)
+{
+	char *name;
+	int fd, saved_errno;
+
+	name = strdup(template);
+	if (name == NULL)
+		return ERR_PTR(-errno);
+
+	fd = mkstemp(name);
+	if (fd == -1)
+		goto err;
+
+	close(fd);
+out:
+	return name;
+err:
+	saved_errno = errno;
+	free(name);
+	name = ERR_PTR(-saved_errno);
+	goto out;
+}
+
+int zeroize_file(const char *filename)
+{
+	struct stat st;
+	void *map;
+	size_t len;
+	int fd, retval = 0;
+
+	if (stat(filename, &st) != 0) {
+		retval = -errno;
+		goto out;
+	}
+
+	len = st.st_size;
+	if (len == 0)
+		goto out;
+
+	fd = open(filename, O_RDWR);
+	if (fd == -1) {
+		retval = -errno;
+		goto out;
+	}
+
+	map = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (map == MAP_FAILED) {
+		retval = -errno;
+		goto close_fd;
+	}
+
+	memset(map, 0, len);
+	munmap(map, len);
+
+close_fd:
+	close(fd);
+out:
+	return retval;
+}

@@ -18,6 +18,7 @@
 #include "compat.h"
 #include "http.h"
 #include "err.h"
+#include "utils.h"
 
 #include <curl/curl.h>
 
@@ -34,15 +35,11 @@ struct http_client {
 struct http_client *alloc_http_client(void)
 {
 	struct http_client *client;
-	char *jarname = strdup(cookie_jar_template);
-	int fd = mkstemp(jarname);
+	char *jarname;
 
-	if (fd == -1) {
-		client = ERR_PTR(-errno);
-		goto err;
-	}
-
-	close(fd);
+	jarname = mktemp_filename(cookie_jar_template);
+	if (IS_ERR(jarname))
+		return ERR_CAST(jarname);
 
 	client = malloc(sizeof(*client));
 	if (client == NULL) {
@@ -56,43 +53,6 @@ out:
 err:
 	free(jarname);
 	goto out;
-}
-
-static int zeroize_file(const char *filename)
-{
-	struct stat st;
-	void *map;
-	size_t len;
-	int fd, retval = 0;
-
-	if (stat(filename, &st) != 0) {
-		retval = -errno;
-		goto out;
-	}
-
-	len = st.st_size;
-	if (len == 0)
-		goto out;
-
-	fd = open(filename, O_RDWR);
-	if (fd == -1) {
-		retval = -errno;
-		goto out;
-	}
-
-	map = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-	if (map == MAP_FAILED) {
-		retval = -errno;
-		goto close_fd;
-	}
-
-	memset(map, 0, len);
-	munmap(map, len);
-
-close_fd:
-	close(fd);
-out:
-	return retval;
 }
 
 void drop_http_client(struct http_client *client)
