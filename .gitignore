@@ -1,10 +1,13 @@
 # Build and temporary files
 /wp-backup
 /tests/test
-/doc/*.gz
 *.o
 *.d
 *~
+
+# Documentation
+/doc/*.[1-7]
+/doc/*.gz
 
 # Distribution files
 /*.tar.gz

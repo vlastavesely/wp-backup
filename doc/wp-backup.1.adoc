@@ -1,0 +1,70 @@
+wp-backup(1)
+============
+:manmanual: wp-backup
+
+NAME
+----
+wp-backup - simple command line tool for automated WordPress backup
+
+
+SYNOPSIS
+--------
+[verse]
+'wp-backup' [-h | --help] [-v | --version] [-w 'URL' | --wpurl 'URL']
+	[-u 'USERNAME' | --username 'USERNAME']
+	[-o 'FILE' | --output-file 'FILE']
+	[-q | --quiet] [--ignore-ssl-errors]
+
+
+DESCRIPTION
+-----------
+*wp-backup* is a simple program that can connect to a remote WordPress
+installation and download a backup of the site as a 'WXR' dump.
+
+The program reads a password from 'WPPASS' environmental variable (if set)
+or from standard input.
+
+The WordPress installed must be v2.5.0 or newer.
+
+
+OPTIONS
+-------
+*-h*, *--help*::
+	prints the help and exits.
+
+*-v*, *--version*::
+	prints the version number and exits.
+
+*-w*, *--wpurl* 'URL'::
+	the root URL of the WordPress installation (without "wp-admin" or
+	"wp-login").
+
+*-u*, *--username* 'USERNAME'::
+	the username for login into the administration of the site.
+
+*-o*, *--output-file* 'FILE'::
+	the destination file name where the downloaded feed should be saved.
+	If not set, the dump will be saved into file "wordpress.xml".
+
+*-q*, *--quiet*
+	disables output into terminal.
+
+
+COPYRIGHT
+---------
+Copyright (c) 2018 Vlasta Vesely.
+
+
+LICENSING AND WARRANTY
+----------------------
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2 as published
+by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+For more details about the license, see the file 'COPYING' that was included
+along with the source code of this program.
