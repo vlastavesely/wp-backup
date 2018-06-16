@@ -23,6 +23,9 @@ RM = rm -f
 OBJFILES = $(patsubst %.c, %.o, $(shell $(FIND) src -type f -name "*.c"))
 MANPAGES = $(patsubst %.adoc, %.gz, $(shell $(FIND) doc -type f -name "*.adoc"))
 
+TEST_OBJFILES = $(patsubst %.c, %.o, $(shell $(FIND) tests -type f -name "*.c"))
+TEST_OBJFILES += $(filter-out src/wp-backup.o, $(OBJFILES))
+
 depfile = $(dir $@).depend/$(notdir $@).d
 
 
@@ -48,8 +51,11 @@ doc/%: doc/%.adoc
 doc/%.gz: doc/%
 	gzip < $< > $@
 
-test:
-	@echo "TODO"
+test: tests/test
+	tests/test
+
+tests/test: $(TEST_OBJFILES)
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o tests/test -lcunit
 
 install: all
 	$(INSTALL) -m 755 $(PROGNAME) $(BINDIR)
@@ -60,6 +66,6 @@ uninstall:
 	$(RM) $(MANDIR)/man1/$(PROGNAME).1.gz
 
 clean:
-	$(RM) *.o $(PROGNAME)
+	$(RM) */*.o $(PROGNAME) tests/test
 	$(RM) -r */.depend
 	$(RM) doc/*.[1-7] doc/*.gz

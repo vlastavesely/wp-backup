@@ -1,8 +1,10 @@
 # Build and temporary files
 /wp-backup
 /tests/test
+/config.mak
 *.o
 *.d
+.depend
 *~
 
 # Documentation
