@@ -1,8 +1,6 @@
 #ifndef __COMPAT_H
 #define __COMPAT_H
 
-#include "../config.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

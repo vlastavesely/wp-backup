@@ -21,6 +21,9 @@
 #include "password-resolver.h"
 #include "err.h"
 
+#define PACKAGE_NAME "wp-backup"
+#define PACKAGE_VERSION "0.1"
+
 static const char *usage_string =
 	PACKAGE_NAME " [options]\n"
 	"\n"

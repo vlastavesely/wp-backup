@@ -1,7 +1,6 @@
 AC_PREREQ([2.69])
 AC_INIT([wp-backup], [0.1], [vlastavesely@protonmail.ch])
 AC_CONFIG_SRCDIR([src])
-AC_CONFIG_HEADERS([config.h])
 AC_PREFIX_DEFAULT([/usr])
 
 # Checks for programs.

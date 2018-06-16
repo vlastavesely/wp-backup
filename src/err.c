@@ -22,7 +22,7 @@ static void vreportf(const char *prefix, const char *err, va_list params)
 	char msg[4096];
 
 	vsnprintf(msg, sizeof(msg), err, params);
-	fprintf(stderr, "[%s] %s%s\n", PACKAGE_NAME, prefix, msg);
+	fprintf(stderr, "[%s] %s%s\n", "wp-backup", prefix, msg);
 }
 
 static void warning_builtin(const char *warn, va_list params)
