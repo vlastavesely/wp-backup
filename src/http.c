@@ -22,71 +22,34 @@
 
 #include <curl/curl.h>
 
-static const char *cookie_jar_template = "/tmp/wp-backup-cookies-XXXXXX";
 
-/*
- * Structure for session data storage. It holds data we need between
- * multiple HTTP requests sent.
- */
 struct http_client {
-	char *cookiejar;
 	CURL *curl;
 };
-
-static CURL *initialize_curl(const char *cookiejar)
-{
-	CURL *curl;
-
-	curl = curl_easy_init();
-	if (!curl)
-		return ERR_PTR(-1);
-
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-
-	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
-
-//	/* Read cookies from this file. */
-//	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookiejar);
-
-//	/* Save cookies to this file after `curl_easy_cleanup()` called. */
-//	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookiejar);
-
-	return curl;
-}
 
 struct http_client *alloc_http_client(void)
 {
 	struct http_client *client;
-	char *jarname;
 	CURL *curl;
 
-	jarname = mktemp_filename(cookie_jar_template);
-	if (IS_ERR(jarname))
-		return ERR_CAST(jarname);
+	curl = curl_easy_init();
+	if (IS_ERR(curl))
+		return ERR_CAST(curl);
 
-	curl = initialize_curl(jarname);
-	if (IS_ERR(curl)) {
-		client = ERR_CAST(curl);
-		goto drop_jarname;
-	}
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
+	// curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 
 	client = malloc(sizeof(*client));
 	if (client == NULL) {
-		client = ERR_PTR(-ENOMEM);
-		goto drop_curl;
+		curl_easy_cleanup(curl);
+		return ERR_PTR(-ENOMEM);
 	}
 
-	client->cookiejar = jarname;
 	client->curl = curl;
 
-out:
 	return client;
-drop_curl:
-	curl_easy_cleanup(curl);
-drop_jarname:
-	free(jarname);
-	goto out;
 }
 
 void drop_http_client(struct http_client *client)
@@ -94,14 +57,7 @@ void drop_http_client(struct http_client *client)
 	if (IS_ERR_OR_NULL(client))
 		return;
 
-	if (zeroize_file(client->cookiejar) != 0)
-		error("failed to zeroize cookie jar.");
-	if (unlink(client->cookiejar) != 0)
-		error("failed to remove cookie jar.");
-
-	free(client->cookiejar);
 	curl_easy_cleanup(client->curl);
-
 	free(client);
 }
 
@@ -117,6 +73,7 @@ struct http_request *alloc_http_request()
 
 	memset(request, 0, sizeof(*request));
 	request->method = "GET";
+
 	return request;
 }
 
@@ -141,6 +98,7 @@ static struct http_response *alloc_http_response()
 		return ERR_PTR(-ENOMEM);
 
 	memset(response, 0, sizeof(*response));
+
 	return response;
 }
 
@@ -237,6 +195,7 @@ struct http_response *http_client_send(struct http_client *client,
 	curl_easy_setopt(curl, CURLOPT_URL, request->url);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, str_buffer_append);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, request->method);
 
 	if (strcmp(request->method, "POST") == 0) {
 		/* POST request */

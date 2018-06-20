@@ -21,7 +21,4 @@
 void urlencode_to_buf(const char *str, char *buf);
 void html_decode_entities_to_buf(const char *str, char *buf);
 
-char *mktemp_filename(const char *template);
-int zeroize_file(const char *filename);
-
 #endif /* __UTILS_H */
