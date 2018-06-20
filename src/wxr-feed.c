@@ -198,12 +198,12 @@ struct wxr_feed *wxr_feed_load(const char *filename)
 out:
 	return feed;
 drop_feed:
-	drop_wxr_feed(feed);
+	wxr_feed_drop(feed);
 	feed = ERR_PTR(err);
 	goto out;
 }
 
-void drop_wxr_feed(struct wxr_feed *feed)
+void wxr_feed_drop(struct wxr_feed *feed)
 {
 	if (IS_ERR_OR_NULL(feed))
 		return;

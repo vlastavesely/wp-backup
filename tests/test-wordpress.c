@@ -44,7 +44,7 @@ static void test_wordpress_login_logout(void)
 	CU_ASSERT_PTR_NOT_NULL(fp);
 	fclose(fp);
 
-	drop_wordpress(wordpress);
+	wordpress_drop(wordpress);
 }
 
 void test_wordpress_add_tests(struct CU_Suite *suite)

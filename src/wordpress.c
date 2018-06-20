@@ -124,7 +124,7 @@ struct wordpress *wordpress_create(const char *wpurl)
 	if (!connection)
 		return ERR_PTR(-ENOMEM);
 
-	connection->http_client = alloc_http_client();
+	connection->http_client = http_client_alloc();
 	connection->wpurl = wpurl;
 	connection->logout_url = NULL;
 	/* if (options->ignore_ssl_errors) TODO
@@ -133,12 +133,12 @@ struct wordpress *wordpress_create(const char *wpurl)
 	return connection;
 }
 
-void drop_wordpress(struct wordpress *connection)
+void wordpress_drop(struct wordpress *connection)
 {
 	if (IS_ERR_OR_NULL(connection))
 		return;
 
-	drop_http_client(connection->http_client);
+	http_client_drop(connection->http_client);
 	free(connection->logout_url);
 	free(connection);
 }
@@ -162,7 +162,7 @@ int wordpress_login(struct wordpress *connection, const char *username,
 		goto out;
 	}
 
-	request = alloc_http_request();
+	request = http_request_alloc();
 	if (IS_ERR(request)) {
 		free(url);
 		retval = PTR_ERR(request);
@@ -183,10 +183,10 @@ int wordpress_login(struct wordpress *connection, const char *username,
 
 	/* Zeroize password in the body of the request */
 	memset(request->body, 0, strlen(request->body));
-	drop_http_response(response);
+	http_response_drop(response);
 
 drop_request:
-	drop_http_request(request);
+	http_request_drop(request);
 out:
 	return retval;
 }
@@ -216,7 +216,7 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 		retval = PTR_ERR(response);
 		goto out;
 	}
-	drop_http_response(response);
+	http_response_drop(response);
 
 	/*
 	 * Tries to load the downloaded XML to check its validity.
@@ -245,7 +245,7 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 			posts != 1 ? "s" : "", pages, pages != 1 ? "s" : "");
 	}
 
-	drop_wxr_feed(feed);
+	wxr_feed_drop(feed);
 out:
 	return retval;
 }
@@ -262,7 +262,7 @@ int wordpress_logout(struct wordpress *connection)
 	if (!connection->logout_url)
 		return -1;
 
-	request = alloc_http_request();
+	request = http_request_alloc();
 	request->url = strdup(connection->logout_url);
 	response = http_client_send(connection->http_client, request);
 
@@ -276,10 +276,10 @@ int wordpress_logout(struct wordpress *connection)
 	 * TODO: figure out something smarter...
 	 */
 	ptr = strstr(response->body, "loginform");
-	drop_http_response(response);
+	http_response_drop(response);
 
 drop_request:
-	drop_http_request(request);
+	http_request_drop(request);
 
 	return ptr != NULL ? 0 : -2;
 }
@@ -293,7 +293,7 @@ struct http_response *wordpress_download_to_file(struct wordpress *connection,
 	struct http_request *request;
 	struct http_response *response;
 
-	request = alloc_http_request();
+	request = http_request_alloc();
 	if (IS_ERR(request)) {
 		response = ERR_CAST(request);
 		goto out;
@@ -301,7 +301,7 @@ struct http_response *wordpress_download_to_file(struct wordpress *connection,
 
 	request->url = strdup(url);
 	response = http_client_download_file(connection->http_client, request, filename);
-	drop_http_request(request);
+	http_request_drop(request);
 
 out:
 	return response;

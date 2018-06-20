@@ -103,7 +103,7 @@ int main(int argc, const char **argv)
 	}
 
 drop_wordpress:
-	drop_wordpress(wordpress);
+	wordpress_drop(wordpress);
 out:
 	return retval;
 }

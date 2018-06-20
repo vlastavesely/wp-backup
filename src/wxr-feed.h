@@ -39,7 +39,7 @@ struct post {
 };
 
 struct wxr_feed *wxr_feed_load(const char *filename);
-void drop_wxr_feed(struct wxr_feed *feed);
+void wxr_feed_drop(struct wxr_feed *feed);
 
 struct post *wxr_feed_get_posts(struct wxr_feed *feed);
 struct post *wxr_feed_get_pages(struct wxr_feed *feed);

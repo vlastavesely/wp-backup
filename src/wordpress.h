@@ -21,7 +21,7 @@
 struct wordpress;
 
 struct wordpress *wordpress_create(const char *wpurl);
-void drop_wordpress(struct wordpress *connection);
+void wordpress_drop(struct wordpress *connection);
 
 int wordpress_login(struct wordpress *connection,
 		const char *username, const char *password);

@@ -27,7 +27,7 @@ struct http_client {
 	CURL *curl;
 };
 
-struct http_client *alloc_http_client(void)
+struct http_client *http_client_alloc(void)
 {
 	struct http_client *client;
 	CURL *curl;
@@ -52,7 +52,7 @@ struct http_client *alloc_http_client(void)
 	return client;
 }
 
-void drop_http_client(struct http_client *client)
+void http_client_drop(struct http_client *client)
 {
 	if (IS_ERR_OR_NULL(client))
 		return;
@@ -63,7 +63,7 @@ void drop_http_client(struct http_client *client)
 
 /******************************************************************************/
 
-struct http_request *alloc_http_request()
+struct http_request *http_request_alloc()
 {
 	struct http_request *request;
 
@@ -77,7 +77,7 @@ struct http_request *alloc_http_request()
 	return request;
 }
 
-void drop_http_request(struct http_request *request)
+void http_request_drop(struct http_request *request)
 {
 	if (IS_ERR_OR_NULL(request))
 		return;
@@ -89,7 +89,7 @@ void drop_http_request(struct http_request *request)
 
 /******************************************************************************/
 
-static struct http_response *alloc_http_response()
+static struct http_response *http_response_alloc()
 {
 	struct http_response *response;
 
@@ -102,7 +102,7 @@ static struct http_response *alloc_http_response()
 	return response;
 }
 
-void drop_http_response(struct http_response *response)
+void http_response_drop(struct http_response *response)
 {
 	if (IS_ERR_OR_NULL(response))
 		return;
@@ -174,7 +174,7 @@ static struct http_response *http_curl_perform(CURL *curl)
 	if (retval != 0)
 		return ERR_PTR(-retval);
 
-	response = alloc_http_response();
+	response = http_response_alloc();
 	response->code = code;
 	response->content_type = strdup(mime);
 
