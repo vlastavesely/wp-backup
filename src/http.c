@@ -30,27 +30,61 @@ static const char *cookie_jar_template = "/tmp/wp-backup-cookies-XXXXXX";
  */
 struct http_client {
 	char *cookiejar;
+	CURL *curl;
 };
+
+static CURL *initialize_curl(const char *cookiejar)
+{
+	CURL *curl;
+
+	curl = curl_easy_init();
+	if (!curl)
+		return ERR_PTR(-1);
+
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+
+	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
+
+//	/* Read cookies from this file. */
+//	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookiejar);
+
+//	/* Save cookies to this file after `curl_easy_cleanup()` called. */
+//	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookiejar);
+
+	return curl;
+}
 
 struct http_client *alloc_http_client(void)
 {
 	struct http_client *client;
 	char *jarname;
+	CURL *curl;
 
 	jarname = mktemp_filename(cookie_jar_template);
 	if (IS_ERR(jarname))
 		return ERR_CAST(jarname);
 
+	curl = initialize_curl(jarname);
+	if (IS_ERR(curl)) {
+		client = ERR_CAST(curl);
+		goto drop_jarname;
+	}
+
 	client = malloc(sizeof(*client));
 	if (client == NULL) {
 		client = ERR_PTR(-ENOMEM);
-		goto err;
+		goto drop_curl;
 	}
 
 	client->cookiejar = jarname;
+	client->curl = curl;
+
 out:
 	return client;
-err:
+drop_curl:
+	curl_easy_cleanup(curl);
+drop_jarname:
 	free(jarname);
 	goto out;
 }
@@ -60,13 +94,14 @@ void drop_http_client(struct http_client *client)
 	if (IS_ERR_OR_NULL(client))
 		return;
 
-	if (client->cookiejar) {
-		if (zeroize_file(client->cookiejar) != 0)
-			error("failed to zeroize cookie jar.");
-		if (unlink(client->cookiejar) != 0)
-			error("failed to remove cookie jar.");
-		free(client->cookiejar);
-	}
+	if (zeroize_file(client->cookiejar) != 0)
+		error("failed to zeroize cookie jar.");
+	if (unlink(client->cookiejar) != 0)
+		error("failed to remove cookie jar.");
+
+	free(client->cookiejar);
+	curl_easy_cleanup(client->curl);
+
 	free(client);
 }
 
@@ -162,58 +197,29 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 
 /******************************************************************************/
 
-/*
- * Initializes default cURL context from request data.
- */
-static CURL *build_curl_instance(struct http_client *client,
-		struct http_request *request)
-{
-	CURL *curl;
-
-	curl = curl_easy_init();
-	if (!curl)
-		return ERR_PTR(-1);
-
-	curl_easy_setopt(curl, CURLOPT_URL, request->url);
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
-
-	/* Read cookies from this file. */
-	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, client->cookiejar);
-
-	/* Save cookies to this file after `curl_easy_cleanup()` called. */
-	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, client->cookiejar);
-
-	if (strcmp(request->method, "GET") == 0)
-		goto out;
-
-	/* POST request */
-	assert(request->body != NULL);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request->body);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(request->body));
-
-out:
-	return curl;
-}
-
 static struct http_response *http_curl_perform(CURL *curl)
 {
 	struct http_response *response;
-	unsigned int http_code = 0;
-	const char *content_type = NULL;
+	unsigned int code = 0;
+	const char *mime = NULL;
+	int retval;
 
-	if (curl_easy_perform(curl) != CURLE_OK)
-		return ERR_PTR(-1);
+	retval = curl_easy_perform(curl);
+	if (retval != 0)
+		return ERR_PTR(-retval);
 
-	if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code) != 0)
-		return ERR_PTR(-2);
+	retval = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+	if (retval != 0)
+		return ERR_PTR(-retval);
 
-	if (curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &content_type) != 0)
-		return ERR_PTR(-3);
+	retval = curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &mime);
+	if (retval != 0)
+		return ERR_PTR(-retval);
 
 	response = alloc_http_response();
-	response->code = http_code;
-	response->content_type = strdup(content_type);
+	response->code = code;
+	response->content_type = strdup(mime);
+
 	return response;
 }
 
@@ -225,15 +231,20 @@ struct http_response *http_client_send(struct http_client *client,
 {
 	struct http_response *response;
 	struct string_buffer str;
-	CURL *curl;
-
-	curl = build_curl_instance(client, request);
-	if (IS_ERR(curl))
-		return ERR_CAST(curl);
+	CURL *curl = client->curl;
 
 	string_buffer_init(&str);
+	curl_easy_setopt(curl, CURLOPT_URL, request->url);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &str);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, str_buffer_append);
+
+	if (strcmp(request->method, "POST") == 0) {
+		/* POST request */
+		assert(request->body != NULL);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request->body);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(request->body));
+	}
+
 	response = http_curl_perform(curl);
 	if (IS_ERR(response))
 		goto err;
@@ -245,7 +256,6 @@ struct http_response *http_client_send(struct http_client *client,
 	response->body = str.data;
 
 out:
-	curl_easy_cleanup(curl);
 	return response;
 err:
 	string_buffer_clear(&str);
@@ -261,22 +271,20 @@ struct http_response *http_client_download_file(struct http_client *client,
 		const char *filename)
 {
 	struct http_response *response;
-	CURL *curl;
+	CURL *curl = client->curl;
+
 	FILE *fp;
 
 	fp = fopen(filename, "w");
-	if (!fp)
+	if (fp == NULL)
 		return ERR_PTR(-errno);
 
-	curl = build_curl_instance(client, request);
-	if (IS_ERR(curl))
-		return (struct http_response *) curl; /* Error code */
-
+	curl_easy_setopt(curl, CURLOPT_URL, request->url);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
 
 	response = http_curl_perform(curl);
-
 	fclose(fp);
-	curl_easy_cleanup(curl);
+
 	return response;
 }
