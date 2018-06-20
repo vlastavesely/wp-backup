@@ -22,7 +22,7 @@ static void vreportf(const char *prefix, const char *err, va_list params)
 	char msg[4096];
 
 	vsnprintf(msg, sizeof(msg), err, params);
-	fprintf(stderr, "[%s] %s%s\n", "wp-backup", prefix, msg);
+	fprintf(stderr, "[wp-backup] %s%s\n", prefix, msg);
 }
 
 static void warning_builtin(const char *warn, va_list params)
@@ -37,7 +37,7 @@ static void error_builtin(const char *err, va_list params)
 
 static void die_builtin(const char *err, va_list params)
 {
-	fprintf(stderr, err, params);
+	vfprintf(stderr, err, params);
 	exit(128);
 }
 
