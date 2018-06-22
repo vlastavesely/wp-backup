@@ -115,7 +115,6 @@ int options_parse(struct options *options, int argc, const char **argv)
 	options->help = false;
 	options->ignore_ssl_errors = false;
 
-	/* No arguments provided, show usage */
 	if (argc == 1) {
 		options->help = true;
 		return 0;

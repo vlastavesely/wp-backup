@@ -39,7 +39,7 @@ struct http_client *http_client_alloc(void)
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 	curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
 	curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
-	// curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	/* curl_easy_setopt(curl, CURLOPT_VERBOSE, 1); */
 
 	client = malloc(sizeof(*client));
 	if (client == NULL) {
@@ -106,11 +106,6 @@ static void string_buffer_clear(struct string_buffer *str)
 	str->nbytes = 0;
 }
 
-/*
- * Write callback for cURL. On success, it should return number of bytes
- * that were actually written. If return value differs, the call is
- * considered to be failed.
- */
 static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 	struct string_buffer *str)
 {
@@ -155,9 +150,6 @@ static struct http_response *http_curl_get_response(CURL *curl)
 	return response;
 }
 
-/*
- * Sends a request to a server and returns body of the response.
- */
 struct http_response *http_client_send(struct http_client *client,
 		struct http_request *request)
 {
@@ -172,7 +164,6 @@ struct http_response *http_client_send(struct http_client *client,
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, request->method);
 
 	if (strcmp(request->method, "POST") == 0) {
-		/* POST request */
 		assert(request->body != NULL);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request->body);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(request->body));
@@ -182,10 +173,8 @@ struct http_response *http_client_send(struct http_client *client,
 	if (IS_ERR(response))
 		goto err;
 
-	/*
-	 * Response takes over the string, it won't be freed here
-	 * but with freeing of the response.
-	 */
+	/* Response takes over the string, it won't be freed here
+	 * but with freeing of the response. */
 	response->body = str.data;
 
 out:
@@ -195,10 +184,6 @@ err:
 	goto out;
 }
 
-/*
- * Sends a request to a server and saves downloaded data into a file.
- * Returns a HTTP response with metadata and empty body.
- */
 int http_client_download_file(struct http_client *client,
 			      struct http_request *request,
 			      const char *filename)

@@ -22,23 +22,14 @@
 #include "utils.h"
 #include "err.h"
 
-/*
- * This structure represents a connection to a remote WordPress
- * installation. It contains pointer to a HTTP client holding
- * information about a session identifier to hold login session
- * open. If the user has been logged in successfully, property
- * 'logout_url' is set to URL for logout.
- */
+
 struct wordpress {
 	struct http_client *http_client;
 	const char *wpurl;
 	char *logout_url;
 };
 
-/*
- * Builds an absolute URL from a relative one by proper appending
- * of path to root path of the WordPress installation.
- */
+
 static char *wordpress_build_url(const char *wpurl, const char *path)
 {
 	char *url;
@@ -51,10 +42,9 @@ static char *wordpress_build_url(const char *wpurl, const char *path)
 
 	strcpy(url, wpurl);
 	/*
-	 * The URL must not contain two slashes after root of the
-	 * wordpress installation! We must generate a proper URL with
-	 * just one slash inside in order to prevent an unexpected fail
-	 * of exporting a dump.
+	 * The URL must not contain two slashes after the root to be valid.
+	 * We must ensure that there is only one '/' to prevent an unexpected
+	 * failure.
 	 */
 	if (url[strlen(wpurl) - 1] == '/')
 		url[strlen(wpurl) - 1] = '\0';
@@ -63,20 +53,14 @@ static char *wordpress_build_url(const char *wpurl, const char *path)
 	return url;
 }
 
-/*
- * Builds a body of the POST request for login into WordPress administration.
- * The body must contain username and password. It fakes standard login through
- * the login page.
- */
 static char *wordpress_build_login_body(const char *username,
 					const char *password)
 {
 	unsigned int len;
 	char *body;
 
-	/* Allocates a buffer for encoded URL. Since any character could be
-	 * expanded into '%XX' form, the buffer must be three times bigger
-	 * than all strings that will be decoded. */
+	/* Make the buffer big enough - every byte can become three chars long
+	 * when encoded (for example: '/' > '%2F'). */
 	len = 32 + (strlen(username) * 3) + (strlen(password) * 3) + 1;
 	body = malloc(len);
 	if (body == NULL)
@@ -91,10 +75,6 @@ static char *wordpress_build_login_body(const char *username,
 	return body;
 }
 
-/*
- * Looks for logout URL in body of a HTTP response. If found, it means
- * that our login action can be considered to be successful.
- */
 static int wordpress_match_logout_url(struct wordpress *connection,
 				      struct http_response *response)
 {
@@ -104,11 +84,7 @@ static int wordpress_match_logout_url(struct wordpress *connection,
 	ptr = strstr(response->body, "/wp-login.php?action=logout");
 	if (ptr) {
 		*(strstr(ptr, "\"")) = 0;
-		/*
-		 * Logout URL does contain characters '&' (maybe even other
-		 * characters) encoded as HTML entity so we cannot use it
-		 * without proper decoding: logout would fail without it.
-		 */
+		/* Needs to decode '&amp;' sequences: */
 		html_decode_entities_to_buf(ptr, path);
 		connection->logout_url = wordpress_build_url(connection->wpurl, path);
 	}
@@ -143,11 +119,6 @@ void wordpress_drop(struct wordpress *connection)
 	free(connection);
 }
 
-/*
- * Logs into the WordPress installation. If body of the HTTP response
- * after login does contain a valid logout URL, the login is considered
- * to be successful and zero code is returned, -1 otherwise.
- */
 int wordpress_login(struct wordpress *connection, const char *username,
 		const char *password)
 {
@@ -190,10 +161,6 @@ out:
 	return retval;
 }
 
-/*
- * Saves an export dump to a file. To be considered as success, the response
- * must be a valid WXR feed.
- */
 int wordpress_export(struct wordpress *connection, const char *filename,
 		     bool quiet)
 {
@@ -211,10 +178,6 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 	if (retval != 0)
 		return retval;
 
-	/*
-	 * Tries to load the downloaded XML to check its validity.
-	 * If the data are corrupted, download failed.
-	 */
 	feed = wxr_feed_load(filename);
 	if (IS_ERR(feed))
 		return PTR_ERR(feed);
@@ -241,9 +204,6 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 	return 0;
 }
 
-/*
- * Invalidates a session by logout.
- */
 int wordpress_logout(struct wordpress *connection)
 {
 	struct http_request request;
@@ -259,8 +219,8 @@ int wordpress_logout(struct wordpress *connection)
 	response = http_client_send(connection->http_client, &request);
 	if (!IS_ERR(response)) {
 		/*
-		 * If the reponse contains a 'loginform', it can be considered
-		 * to be standard login page (so logout has been successful).
+		 * If the response contains a 'loginform' string, we assume
+		 * to be logged out.
 		 *
 		 * TODO: figure out something smarter...
 		 */
@@ -271,9 +231,6 @@ int wordpress_logout(struct wordpress *connection)
 	return ptr != NULL ? 0 : -2;
 }
 
-/*
- * Donwloads a file from an absolute URL.
- */
 int wordpress_download_to_file(struct wordpress *connection, const char *url,
 			       const char *filename)
 {

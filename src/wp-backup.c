@@ -81,7 +81,6 @@ int main(int argc, const char **argv)
 		goto drop_wordpress;
 	}
 
-	/* Log in */
 	retval = wordpress_login(wordpress, options.username, password);
 	memset(password, 0, strlen(password));
 	free(password);
@@ -90,13 +89,11 @@ int main(int argc, const char **argv)
 		goto drop_wordpress;
 	}
 
-	/* Download WXR dump */
 	if (wordpress_export(wordpress, options.output_file, options.quiet) != 0) {
 		error("export failed.");
 		goto drop_wordpress;
 	}
 
-	/* Invalidate HTTP session by log out (for security reasons) */
 	if (wordpress_logout(wordpress) != 0) {
 		error("logout failed.");
 		goto drop_wordpress;

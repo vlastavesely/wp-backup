@@ -19,10 +19,7 @@
 #include "err.h"
 #include "password-resolver.h"
 
-/*
- * If read from standard input, a password ends with a newline. We need
- * to get rid of it here in order to be able to do successful log in.
- */
+
 static void trim_trailing_newlines(char *str)
 {
 	char *last = str + strlen(str) - 1;
@@ -31,10 +28,6 @@ static void trim_trailing_newlines(char *str)
 		*(last--) = '\0';
 }
 
-/*
- * Returns a newly allocated string containing a password or an error code.
- * Returned value must be freed.
- */
 char *password_resolver_resolve_password(void)
 {
 	struct termios oflags, nflags;
@@ -42,10 +35,6 @@ char *password_resolver_resolve_password(void)
 	char *password;
 	int saved_errno;
 
-	/*
-	 * If environmental variable WPPASS is set, consider its contents
-	 * to be user's password. 
-	 */
 	if ((password = getenv("WPPASS"))) {
 		password = strdup(password);
 		unsetenv("WPPASS");
@@ -53,7 +42,6 @@ char *password_resolver_resolve_password(void)
 	}
 
 	if (isatty(0)) {
-		/* In terminal, ask user for password interactively. */
 		tcgetattr(0, &oflags);
 		nflags = oflags;
 		nflags.c_lflag &= ~ECHO;
@@ -74,7 +62,6 @@ char *password_resolver_resolve_password(void)
 		}
 
 	} else {
-		/* Read from piped input. */
 		if (fgets(buffer, sizeof(buffer), stdin) == NULL)
 			return ERR_PTR(-1);
 	}

@@ -73,10 +73,8 @@ static void decode_named_entity(char **dest, const char *src)
 	else if (!strncmp(src, "gt;", 3))
 		*(*dest) = '>';
 	else {
-		/* Other entities *should* not be needed in context
-		 * we need. But you can never know when authors of
-		 * WordPress decide to change something... */
-		warning("unknown HTML entity.");
+		/* Other entities *should* not be needed here. */
+		warning("unknown HTML entity found.");
 		*(*dest) = '?';
 	}
 }
