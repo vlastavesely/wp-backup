@@ -34,9 +34,6 @@ struct http_response {
 struct http_client *http_client_alloc(void);
 void http_client_drop(struct http_client *client);
 
-struct http_request *http_request_alloc();
-void http_request_drop(struct http_request *request);
-
 void http_response_drop(struct http_response *response);
 
 struct http_response *http_client_send(struct http_client *client,

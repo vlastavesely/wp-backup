@@ -63,32 +63,6 @@ void http_client_drop(struct http_client *client)
 
 /******************************************************************************/
 
-struct http_request *http_request_alloc()
-{
-	struct http_request *request;
-
-	request = malloc(sizeof(*request));
-	if (!request)
-		return ERR_PTR(-ENOMEM);
-
-	memset(request, 0, sizeof(*request));
-	request->method = "GET";
-
-	return request;
-}
-
-void http_request_drop(struct http_request *request)
-{
-	if (IS_ERR_OR_NULL(request))
-		return;
-
-	free(request->url);
-	free(request->body);
-	free(request);
-}
-
-/******************************************************************************/
-
 static struct http_response *http_response_alloc()
 {
 	struct http_response *response;

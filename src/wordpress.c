@@ -151,10 +151,10 @@ void wordpress_drop(struct wordpress *connection)
 int wordpress_login(struct wordpress *connection, const char *username,
 		const char *password)
 {
-	struct http_request *request;
+	struct http_request request;
 	struct http_response *response;
-	char *url;
-	int retval;
+	char *url, *body;
+	int retval = 0;
 
 	url = wordpress_build_url(connection->wpurl, "/wp-login.php");
 	if (IS_ERR(url)) {
@@ -162,31 +162,30 @@ int wordpress_login(struct wordpress *connection, const char *username,
 		goto out;
 	}
 
-	request = http_request_alloc();
-	if (IS_ERR(request)) {
-		free(url);
-		retval = PTR_ERR(request);
-		goto out;
+	body = wordpress_build_login_body(username, password);
+	if (IS_ERR(body)) {
+		retval = PTR_ERR(body);
+		goto drop_url;
 	}
 
-	request->method = "POST";
-	request->url = url;
-	request->body = wordpress_build_login_body(username, password);
+	request.method = "POST";
+	request.url = url;
+	request.body = body;
 
-	response = http_client_send(connection->http_client, request);
+	response = http_client_send(connection->http_client, &request);
+	memset(body, 0, strlen(body));
+
 	if (IS_ERR(response)) {
-		retval = -1;
-		goto drop_request;
+		retval = PTR_ERR(response);
+		goto drop_body;
 	}
 
 	retval = wordpress_match_logout_url(connection, response);
 
-	/* Zeroize password in the body of the request */
-	memset(request->body, 0, strlen(request->body));
-	http_response_drop(response);
-
-drop_request:
-	http_request_drop(request);
+drop_body:
+	free(body);
+drop_url:
+	free(url);
 out:
 	return retval;
 }
@@ -255,31 +254,27 @@ out:
  */
 int wordpress_logout(struct wordpress *connection)
 {
-	struct http_request *request;
+	struct http_request request;
 	struct http_response *response;
 	const char *ptr = NULL;
 
-	if (!connection->logout_url)
+	if (connection->logout_url == NULL)
 		return -1;
 
-	request = http_request_alloc();
-	request->url = strdup(connection->logout_url);
-	response = http_client_send(connection->http_client, request);
+	request.method = "GET";
+	request.url = connection->logout_url;
 
-	if (IS_ERR(response))
-		goto drop_request;
-
-	/*
-	 * If the reponse contains a 'loginform', it can be considered
-	 * to be standard login page (so logout has been successful).
-	 *
-	 * TODO: figure out something smarter...
-	 */
-	ptr = strstr(response->body, "loginform");
-	http_response_drop(response);
-
-drop_request:
-	http_request_drop(request);
+	response = http_client_send(connection->http_client, &request);
+	if (!IS_ERR(response)) {
+		/*
+		 * If the reponse contains a 'loginform', it can be considered
+		 * to be standard login page (so logout has been successful).
+		 *
+		 * TODO: figure out something smarter...
+		 */
+		ptr = strstr(response->body, "loginform");
+		http_response_drop(response);
+	}
 
 	return ptr != NULL ? 0 : -2;
 }
@@ -290,19 +285,13 @@ drop_request:
 struct http_response *wordpress_download_to_file(struct wordpress *connection,
 		const char *url, const char *filename)
 {
-	struct http_request *request;
+	struct http_request request;
 	struct http_response *response;
 
-	request = http_request_alloc();
-	if (IS_ERR(request)) {
-		response = ERR_CAST(request);
-		goto out;
-	}
+	request.method = "GET";
+	request.url = strdup(url);
 
-	request->url = strdup(url);
-	response = http_client_download_file(connection->http_client, request, filename);
-	http_request_drop(request);
-
-out:
+	response = http_client_download_file(connection->http_client, &request,
+					     filename);
 	return response;
 }
