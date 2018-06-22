@@ -197,35 +197,27 @@ out:
 int wordpress_export(struct wordpress *connection, const char *filename,
 		     bool quiet)
 {
-	struct http_response *response;
 	struct wxr_feed *feed;
 	struct post *walk;
 	char *url;
 	int retval = 0, posts = 0, pages = 0;
 
 	url = wordpress_build_url(connection->wpurl, "/wp-admin/export.php?content=all&download=true");
-	if (IS_ERR(url)) {
-		retval = -1;
-		goto out;
-	}
+	if (IS_ERR(url))
+		return PTR_ERR(url);
 
-	response = wordpress_download_to_file(connection, url, filename);
+	retval = wordpress_download_to_file(connection, url, filename);
 	free(url);
-	if (IS_ERR(response)) {
-		retval = PTR_ERR(response);
-		goto out;
-	}
-	http_response_drop(response);
+	if (retval != 0)
+		return retval;
 
 	/*
 	 * Tries to load the downloaded XML to check its validity.
 	 * If the data are corrupted, download failed.
 	 */
 	feed = wxr_feed_load(filename);
-	if (IS_ERR(feed)) {
-		retval = PTR_ERR(feed);
-		goto out;
-	}
+	if (IS_ERR(feed))
+		return PTR_ERR(feed);
 
 	if (!quiet) {
 		walk = wxr_feed_get_posts(feed);
@@ -245,8 +237,8 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 	}
 
 	wxr_feed_drop(feed);
-out:
-	return retval;
+
+	return 0;
 }
 
 /*
@@ -282,16 +274,15 @@ int wordpress_logout(struct wordpress *connection)
 /*
  * Donwloads a file from an absolute URL.
  */
-struct http_response *wordpress_download_to_file(struct wordpress *connection,
-		const char *url, const char *filename)
+int wordpress_download_to_file(struct wordpress *connection, const char *url,
+			       const char *filename)
 {
 	struct http_request request;
-	struct http_response *response;
+	int retval;
 
 	request.method = "GET";
-	request.url = strdup(url);
-
-	response = http_client_download_file(connection->http_client, &request,
-					     filename);
-	return response;
+	request.url = url;
+	retval = http_client_download_file(connection->http_client, &request,
+					   filename);
+	return retval;
 }

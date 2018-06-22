@@ -20,8 +20,8 @@
 
 struct http_request {
 	const char *method;
-	char *url;
-	char *body;
+	const char *url;
+	const char *body;
 };
 
 struct http_response {
@@ -39,7 +39,7 @@ void http_response_drop(struct http_response *response);
 struct http_response *http_client_send(struct http_client *client,
 		struct http_request *request);
 
-struct http_response *http_client_download_file(struct http_client *client,
+int http_client_download_file(struct http_client *client,
 		struct http_request *request,
 		const char *filename);
 

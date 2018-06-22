@@ -129,7 +129,7 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 
 /******************************************************************************/
 
-static struct http_response *http_curl_perform(CURL *curl)
+static struct http_response *http_curl_get_response(CURL *curl)
 {
 	struct http_response *response;
 	unsigned int code = 0;
@@ -178,7 +178,7 @@ struct http_response *http_client_send(struct http_client *client,
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(request->body));
 	}
 
-	response = http_curl_perform(curl);
+	response = http_curl_get_response(curl);
 	if (IS_ERR(response))
 		goto err;
 
@@ -199,25 +199,24 @@ err:
  * Sends a request to a server and saves downloaded data into a file.
  * Returns a HTTP response with metadata and empty body.
  */
-struct http_response *http_client_download_file(struct http_client *client,
-		struct http_request *request,
-		const char *filename)
+int http_client_download_file(struct http_client *client,
+			      struct http_request *request,
+			      const char *filename)
 {
-	struct http_response *response;
 	CURL *curl = client->curl;
-
+	int retval;
 	FILE *fp;
 
 	fp = fopen(filename, "w");
 	if (fp == NULL)
-		return ERR_PTR(-errno);
+		return -errno;
 
 	curl_easy_setopt(curl, CURLOPT_URL, request->url);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
 
-	response = http_curl_perform(curl);
+	retval = curl_easy_perform(curl);
 	fclose(fp);
 
-	return response;
+	return -retval;
 }
