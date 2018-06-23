@@ -35,19 +35,20 @@ char *password_resolver_resolve_password(void)
 	char *password;
 	int saved_errno;
 
-	if ((password = getenv("WPPASS"))) {
+	password = getenv("WPPASS");
+	if (password != NULL) {
 		password = strdup(password);
 		unsetenv("WPPASS");
 		return password;
 	}
 
-	if (isatty(0)) {
-		tcgetattr(0, &oflags);
+	if (isatty(STDIN_FILENO) == 1) {
+		tcgetattr(STDIN_FILENO, &oflags);
 		nflags = oflags;
 		nflags.c_lflag &= ~ECHO;
 		nflags.c_lflag |= ECHONL;
 
-		if (tcsetattr(0, TCSANOW, &nflags) != 0)
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &nflags) != 0)
 			return ERR_PTR(-errno);
 
 		fprintf(stderr, "Enter your WordPress password: ");
@@ -55,7 +56,7 @@ char *password_resolver_resolve_password(void)
 		if (fgets(buffer, sizeof(buffer), stdin) == NULL)
 			return ERR_PTR(-1);
 
-		if (tcsetattr(0, TCSANOW, &oflags) != 0) {
+		if (tcsetattr(STDIN_FILENO, TCSANOW, &oflags) != 0) {
 			saved_errno = errno;
 			memset(buffer, 0, sizeof(buffer));
 			return ERR_PTR(-saved_errno);

@@ -18,11 +18,7 @@
 #include "compat.h"
 #include "err.h"
 
-static inline char nibble_to_hex(char code)
-{
-	static char hex[] = "0123456789abcdef";
-	return hex[code & 15];
-}
+static const char hex[] = "0123456789abcdef";
 
 void urlencode_to_buf(const char *str, char *buf)
 {
@@ -34,8 +30,8 @@ void urlencode_to_buf(const char *str, char *buf)
 			*buf++ = '+';
 		} else {
 			*buf++ = '%';
-			*buf++ = nibble_to_hex(*str >> 4);
-			*buf++ = nibble_to_hex(*str & 15);
+			*buf++ = hex[*str >> 4];
+			*buf++ = hex[*str & 15];
 		}
 		str++;
 	}
@@ -66,13 +62,13 @@ static void pack_unicode_char(char **dest, unsigned long c)
 
 static void decode_named_entity(char **dest, const char *src)
 {
-	if (!strncmp(src, "amp;", 4))
+	if (strncmp(src, "amp;", 4) == 0) {
 		*(*dest) = '&';
-	else if (!strncmp(src, "lt;", 3))
+	} else if (strncmp(src, "lt;", 3) == 0) {
 		*(*dest) = '<';
-	else if (!strncmp(src, "gt;", 3))
+	} else if (strncmp(src, "gt;", 3) == 0) {
 		*(*dest) = '>';
-	else {
+	} else {
 		/* Other entities *should* not be needed here. */
 		warning("unknown HTML entity found.");
 		*(*dest) = '?';

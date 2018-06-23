@@ -28,7 +28,7 @@ static const struct option long_opts[] = {
 	{"username",    required_argument, 0, 'u'},
 	{"wpurl",       required_argument, 0, 'w'},
 	{"output-file", required_argument, 0, 'o'},
-	{"ignore-ssl-errors", no_argument, 0, 0},
+	{"ignore-ssl-errors", no_argument, 0,  0 },
 	{0, 0, 0, 0}
 };
 
@@ -46,7 +46,7 @@ static int getopt_parse(struct options *options, int argc, const char **argv)
 		switch (c) {
 		case 0:
 			name = long_opts[opt_index].name;
-			if (!strcmp(name, "ignore-ssl-errors"))
+			if (strcmp(name, "ignore-ssl-errors") == 0)
 				options->ignore_ssl_errors = true;
 			break;
 		case 'u':
@@ -94,8 +94,8 @@ static int validate_options(struct options *options)
 		return -1;
 	}
 
-	if (strncmp(options->wpurl, "https://", 8) &&
-	    strncmp(options->wpurl, "http://", 7)) {
+	if (strncmp(options->wpurl, "https://", 8) != 0 &&
+	    strncmp(options->wpurl, "http://", 7) != 0) {
 		error("WordPress URL does not have 'http[s]://' prefix.");
 		return -1;
 	}
