@@ -61,8 +61,6 @@ void http_client_drop(struct http_client *client)
 	free(client);
 }
 
-/******************************************************************************/
-
 static struct http_response *http_response_alloc()
 {
 	struct http_response *response;
@@ -85,8 +83,6 @@ void http_response_drop(struct http_response *response)
 	free(response->content_type);
 	free(response);
 }
-
-/******************************************************************************/
 
 struct string_buffer {
 	char *data;
@@ -112,7 +108,7 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 	size_t length = str->nbytes + (size * nmemb);
 
 	str->data = realloc(str->data, length + 1);
-	if (!str->data)
+	if (str->data == NULL)
 		return 0;
 
 	memcpy(str->data + str->nbytes, ptr, size * nmemb);
@@ -121,8 +117,6 @@ static size_t str_buffer_append(void *ptr, size_t size, size_t nmemb,
 
 	return size * nmemb;
 }
-
-/******************************************************************************/
 
 static struct http_response *http_curl_get_response(CURL *curl)
 {
@@ -144,6 +138,9 @@ static struct http_response *http_curl_get_response(CURL *curl)
 		return ERR_PTR(-retval);
 
 	response = http_response_alloc();
+	if (IS_ERR(response))
+		return response;
+
 	response->code = code;
 	response->content_type = strdup(mime);
 
