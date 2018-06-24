@@ -21,13 +21,12 @@
 
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 
 struct wxr_feed {
 	xmlDoc *doc;
-	xmlNode *rss;
 	struct post *posts;
-	struct post *pages;
-	struct post *attachments;
 };
 
 #define XML_PARSE_FLAGS		XML_PARSE_NOERROR | XML_PARSE_NOWARNING
@@ -35,148 +34,147 @@ struct wxr_feed {
 
 static bool wxr_feed_has_signature_comment(xmlNode *node)
 {
-	char *content;
-	const char *ptr;
-
 	while (node->prev && node->prev->type == XML_COMMENT_NODE) {
 		node = node->prev;
-
-		content = (char *) xmlNodeGetContent(node);
-		ptr = strstr(content, "This is a WordPress eXtended RSS file");
-		xmlFree(content);
-
-		if (ptr != NULL)
+		if (strstr((const char *) node->content,
+			   "This is a WordPress eXtended RSS file"))
 			return true;
 	}
 
 	return false;
 }
 
-static struct post *rss_parse_post(xmlNode *item)
+static char *xml_node_content(const char *xpath, xmlNode *node,
+			      xmlXPathContext *context)
+{
+	xmlXPathObject *result;
+	char *retval = NULL;
+
+	context->node = node;
+	result = xmlXPathEvalExpression(BAD_CAST xpath, context);
+	if (result == NULL)
+		return NULL;
+
+	if (result->nodesetval == NULL || result->nodesetval->nodeNr == 0)
+		goto drop_result;
+
+	retval = (char *) xmlNodeGetContent(result->nodesetval->nodeTab[0]);
+
+drop_result:
+	xmlXPathFreeObject(result);
+	return retval;
+}
+
+static struct post *wxr_parse_post(xmlNode *node, xmlXPathContext *context)
 {
 	struct post *post;
-	xmlNode *child;
+	char *ptr;
 
 	post = malloc(sizeof(*post));
 	if (post == NULL)
 		return ERR_PTR(-ENOMEM);
 
-	post->type = WXR_POST_TYPE_POST;
-	post->attachment_url = NULL;
+	post->name = xml_node_content("title", node, context);
+	post->url = xml_node_content("link", node, context);
+
+	ptr = xml_node_content("wp:post_type", node, context);
+	if (strcmp(ptr, "page") == 0)
+		post->type = WXR_POST_TYPE_PAGE;
+	else if (strcmp(ptr, "attachment") == 0)
+		post->type = WXR_POST_TYPE_ATTACHMENT;
+	else
+		post->type = WXR_POST_TYPE_POST;
+
+	post->attachment_url = xml_node_content("wp:attachment_url", node, context);
 	post->next = NULL;
-
-	for (child = item->children; child; child = child->next) {
-		if (strcmp((char *) child->name, "title") == 0) {
-			post->name = (char *) xmlNodeGetContent(child);
-
-		} else if (strcmp((char *) child->name, "post_type") == 0) {
-			xmlChar *data = xmlNodeGetContent(child);
-
-			if (strcmp((char *) data, "page") == 0)
-				post->type = WXR_POST_TYPE_PAGE;
-			else if (!strcmp((char *) data, "attachment"))
-				post->type = WXR_POST_TYPE_ATTACHMENT;
-
-			xmlFree(data);
-		} else if (strcmp((char *) child->name, "link") == 0) {
-			post->url = (char *) xmlNodeGetContent(child);
-		} else if (strcmp((char *) child->name, "attachment_url") == 0) {
-			post->attachment_url = (char *) xmlNodeGetContent(child);
-		}
-	}
 
 	return post;
 }
 
-static int rss_process_items(xmlNode *channel, struct wxr_feed *feed)
+int wxr_parse_posts(struct wxr_feed *feed)
 {
-	xmlNode *item;
-	struct post *post;
+	xmlNode *root = xmlDocGetRootElement(feed->doc);
+	xmlXPathContext *context;
+	xmlXPathObject *result;
+	xmlNodeSet *nodes;
+	xmlNs *ns;
 	struct post **posts = &(feed->posts);
-	struct post **pages = &(feed->pages);
-	struct post **attachments = &(feed->attachments);
+	int retval = 0, i, nnodes;
 
-	for (item = channel->children; item; item = item->next)
-		if (strcmp((char *) item->name, "item") == 0) {
+	context = xmlXPathNewContext(feed->doc);
+	if (context == NULL) {
+		retval = -1;
+		goto out;
+	}
 
-			post = rss_parse_post(item);
-			if (IS_ERR(post))
-				return -1;
-
-			switch (post->type) {
-			case WXR_POST_TYPE_POST:
-				*posts = post;
-				posts = &(*posts)->next;
-				break;
-			case WXR_POST_TYPE_PAGE:
-				*pages = post;
-				pages = &(*pages)->next;
-				break;
-			case WXR_POST_TYPE_ATTACHMENT:
-				*attachments = post;
-				attachments = &(*attachments)->next;
-				break;
-			}
+	for (ns = root->nsDef; ns; ns = ns->next)
+		if (xmlXPathRegisterNs(context, ns->prefix, ns->href) != 0) {
+			retval = -2;
+			goto drop_context;
 		}
+
+	result = xmlXPathEvalExpression(BAD_CAST "//rss/channel/item", context);
+	if (result == NULL) {
+		retval = -3;
+		goto drop_context;
+	}
+
+	nodes = result->nodesetval;
+	nnodes = nodes ? nodes->nodeNr : 0;
+	for (i = 0; i < nnodes; i++) {
+		*posts = wxr_parse_post(nodes->nodeTab[i], context);
+		posts = &(*posts)->next;
+	}
+
+	xmlXPathFreeObject(result);
+drop_context:
+	xmlXPathFreeContext(context);
+out:
+	return retval;
 
 	return 0;
 }
 
-static int wxr_parse_posts(struct wxr_feed *feed)
-{
-	xmlNode *channel;
-	int retval = 0;
-
-	for (channel = feed->rss->children; channel; channel = channel->next)
-		if (strcmp((char *) channel->name, "channel") == 0) {
-			retval = rss_process_items(channel, feed);
-			if (retval != 0)
-				return retval;
-		}
-
-	return retval;
-}
-
-
 struct wxr_feed *wxr_feed_load(const char *filename)
 {
 	struct wxr_feed *feed;
-	int err;
+	xmlNode *root;
+	int retval = 0;
 
 	feed = malloc(sizeof(*feed));
 	if (!feed) {
-		err = -ENOMEM;
+		feed = ERR_PTR(-ENOMEM);
 		goto out;
 	}
 
 	memset(feed, 0, sizeof(*feed));
-
 	feed->doc = xmlReadFile(filename, NULL, XML_PARSE_FLAGS);
 	if (!feed->doc) {
-		err = -EINVALXML;
+		retval = -EINVALXML;
 		goto drop_feed;
 	}
 
-	feed->rss = xmlDocGetRootElement(feed->doc);
-	if (strcmp("rss", (char *) feed->rss->name)) {
-		err = -EINVALROOT;
+	root = xmlDocGetRootElement(feed->doc);
+	if (strcmp("rss", (char *) root->name) != 0) {
+		retval = -EINVALROOT;
 		goto drop_feed;
 	}
 
-	if (!wxr_feed_has_signature_comment(feed->rss)) {
-		err = -EMISSSIG;
+	if (wxr_feed_has_signature_comment(root) == false) {
+		retval = -EMISSSIG;
 		goto drop_feed;
 	}
 
-	err = wxr_parse_posts(feed);
-	if (err)
-		feed = ERR_PTR(err);
+	retval = wxr_parse_posts(feed);
+	if (retval != 0)
+		feed = ERR_PTR(retval);
 
 out:
 	return feed;
+
 drop_feed:
 	wxr_feed_drop(feed);
-	feed = ERR_PTR(err);
+	feed = ERR_PTR(retval);
 	goto out;
 }
 
@@ -191,19 +189,7 @@ void wxr_feed_drop(struct wxr_feed *feed)
 	free(feed);
 }
 
-/******************************************************************************/
-
 struct post *wxr_feed_get_posts(struct wxr_feed *feed)
 {
 	return feed->posts;
-}
-
-struct post *wxr_feed_get_pages(struct wxr_feed *feed)
-{
-	return feed->pages;
-}
-
-struct post *wxr_feed_get_attachments(struct wxr_feed *feed)
-{
-	return feed->attachments;
 }
