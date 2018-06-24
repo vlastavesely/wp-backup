@@ -95,18 +95,29 @@ static int wordpress_match_logout_url(struct wordpress *connection,
 struct wordpress *wordpress_create(const char *wpurl)
 {
 	struct wordpress *connection;
+	struct http_client *client;
+
+	client = http_client_alloc();
+	if (IS_ERR(client))
+		return ERR_CAST(client);
 
 	connection = malloc(sizeof(*connection));
-	if (!connection)
-		return ERR_PTR(-ENOMEM);
+	if (connection == NULL) {
+		connection = ERR_PTR(-ENOMEM);
+		goto drop_client;
+	}
 
-	connection->http_client = http_client_alloc();
+	connection->http_client = client;
 	connection->wpurl = wpurl;
 	connection->logout_url = NULL;
 	/* if (options->ignore_ssl_errors) TODO
 	 *	http_client_skip_ssl_validation(connection->http_client); */
 
+out:
 	return connection;
+drop_client:
+	http_client_drop(client);
+	goto out;
 }
 
 void wordpress_drop(struct wordpress *connection)
@@ -182,21 +193,26 @@ int wordpress_export(struct wordpress *connection, const char *filename,
 	if (IS_ERR(feed))
 		return PTR_ERR(feed);
 
-	if (!quiet) {
+	if (quiet == false) {
 		walk = wxr_feed_get_posts(feed);
 		while (walk) {
-			posts++;
+			switch (walk->type) {
+			case WXR_POST_TYPE_POST:
+				posts++;
+				break;
+			case WXR_POST_TYPE_PAGE:
+				pages++;
+				break;
+			case WXR_POST_TYPE_ATTACHMENT:
+				/* do nothing */
+				break;
+			}
 			walk = walk->next;
 		}
 
-		walk = wxr_feed_get_pages(feed);
-		while (walk) {
-			pages++;
-			walk = walk->next;
-		}
-
-		fprintf(stderr, "Backed up %d post%s and %d page%s.\n", posts,
-			posts != 1 ? "s" : "", pages, pages != 1 ? "s" : "");
+		fprintf(stderr, "Backed up %d post%s and %d page%s.\n",
+			posts, posts != 1 ? "s" : "",
+			pages, pages != 1 ? "s" : "");
 	}
 
 	wxr_feed_drop(feed);
