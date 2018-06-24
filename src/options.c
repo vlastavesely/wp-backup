@@ -125,8 +125,6 @@ int options_parse(struct options *options, int argc, const char **argv)
 		return retval;
 
 	retval = validate_options(options);
-	if (retval != 0)
-		return retval;
 
-	return 0;
+	return retval;
 }
