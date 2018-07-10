@@ -1,6 +1,8 @@
 # Build and temporary files
 /wp-backup
 /tests/test
+/tests/coverage
+/.cflags
 /config.mak
 *.o
 *.d
